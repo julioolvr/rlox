@@ -4,9 +4,9 @@ use std::io::Write;
 use std::fs::File;
 
 use rlox::scanner::Scanner;
-use rlox::errors::InterpreterError;
+use rlox::errors::Error;
 
-pub fn run_file(path: &str) -> Result<(), InterpreterError> {
+pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
     let mut f = File::open(path).expect("file not found");
     let mut contents = String::new();
     f.read_to_string(&mut contents)
@@ -22,23 +22,29 @@ pub fn run_repl() {
     let user_input = ReplIterator {};
 
     for input in user_input {
-        if let Err(err) = run(input) {
-            println!("Error running command\n{}\n", err);
+        if let Err(errors) = run(input) {
+            println!("");
+
+            for err in errors {
+                println!("{}", err);
+            }
         }
     }
 }
 
-fn run(code: String) -> Result<(), InterpreterError> {
+fn run(code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
+    let (tokens, mut errors) = scanner.scan_tokens();
 
-    for ref token in scanner.scan_tokens() {
-        println!("{}", token);
+    for ref token in tokens {
+        println!("{:?}", token);
     }
 
-    Ok(())
-    // Err(InterpreterError::new(4,
-    //                           String::from("somefile.lox"),
-    //                           String::from("Some parsing error")))
+    if errors.len() == 0 {
+        Ok(())
+    } else {
+        Err(errors)
+    }
 }
 
 struct ReplIterator {}
