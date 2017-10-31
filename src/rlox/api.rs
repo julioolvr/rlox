@@ -16,7 +16,7 @@ pub fn run_file(path: &str) {
 
 pub fn run_repl() {
     println!("Welcome to the rlox prompt");
-    println!("^C to exit");
+    println!("^C to exit\n");
 
     let user_input = ReplIterator {};
 
