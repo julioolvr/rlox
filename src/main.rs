@@ -1,5 +1,4 @@
-extern crate rlox;
-
+mod rlox;
 use std::env;
 
 fn main() {

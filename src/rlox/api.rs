@@ -3,6 +3,8 @@ use std::io::Read;
 use std::io::Write;
 use std::fs::File;
 
+use rlox::scanner::Scanner;
+
 pub fn run_file(path: &str) {
     let mut f = File::open(path).expect("file not found");
     let mut contents = String::new();
@@ -24,7 +26,11 @@ pub fn run_repl() {
 }
 
 fn run(code: String) {
-    println!("Running code\n{}", code);
+    let scanner = Scanner::new(code);
+
+    for ref token in scanner.scan_tokens() {
+        println!("{}", token);
+    }
 }
 
 struct ReplIterator {}
