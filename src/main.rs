@@ -1,3 +1,5 @@
+extern crate rlox;
+
 use std::env;
 
 fn main() {
@@ -7,10 +9,10 @@ fn main() {
     let args: Vec<String> = args.collect();
 
     if args.len() > 1 {
-        println!("Usage: rlox [script]")
-    } else if args.len() == 1 {
-        println!("Run")
+        println!("Usage: rlox [script]");
+    } else if let Some(filename) = args.first() {
+        rlox::run_file(filename);
     } else {
-        println!("REPL")
+        println!("REPL");
     }
 }
