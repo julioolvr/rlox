@@ -10,7 +10,9 @@ fn main() {
     if args.len() > 1 {
         println!("Usage: rlox [script]");
     } else if let Some(filename) = args.first() {
-        rlox::run_file(filename);
+        if let Err(err) = rlox::run_file(filename) {
+            println!("Error running file {}\n{}", filename, err);
+        }
     } else {
         rlox::run_repl();
     }

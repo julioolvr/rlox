@@ -4,14 +4,15 @@ use std::io::Write;
 use std::fs::File;
 
 use rlox::scanner::Scanner;
+use rlox::errors::InterpreterError;
 
-pub fn run_file(path: &str) {
+pub fn run_file(path: &str) -> Result<(), InterpreterError> {
     let mut f = File::open(path).expect("file not found");
     let mut contents = String::new();
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    run(contents);
+    run(contents)
 }
 
 pub fn run_repl() {
@@ -21,16 +22,23 @@ pub fn run_repl() {
     let user_input = ReplIterator {};
 
     for input in user_input {
-        run(input);
+        if let Err(err) = run(input) {
+            println!("Error running command\n{}\n", err);
+        }
     }
 }
 
-fn run(code: String) {
+fn run(code: String) -> Result<(), InterpreterError> {
     let scanner = Scanner::new(code);
 
     for ref token in scanner.scan_tokens() {
         println!("{}", token);
     }
+
+    Ok(())
+    // Err(InterpreterError::new(4,
+    //                           String::from("somefile.lox"),
+    //                           String::from("Some parsing error")))
 }
 
 struct ReplIterator {}
