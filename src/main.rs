@@ -13,6 +13,6 @@ fn main() {
     } else if let Some(filename) = args.first() {
         rlox::run_file(filename);
     } else {
-        println!("REPL");
+        rlox::run_repl();
     }
 }

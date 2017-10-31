@@ -1,5 +1,7 @@
-use std::fs::File;
+use std::io;
 use std::io::Read;
+use std::io::Write;
+use std::fs::File;
 
 pub fn run_file(path: &str) {
     let mut f = File::open(path).expect("file not found");
@@ -10,6 +12,35 @@ pub fn run_file(path: &str) {
     run(contents);
 }
 
+pub fn run_repl() {
+    println!("Welcome to the rlox prompt");
+    println!("^C to exit");
+
+    let user_input = ReplIterator {};
+
+    for input in user_input {
+        run(input);
+    }
+}
+
 fn run(code: String) {
     println!("Running code\n{}", code);
+}
+
+struct ReplIterator {}
+
+impl Iterator for ReplIterator {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        print!(">> ");
+        io::stdout().flush().expect("Error flushing to stdout");
+
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Error reading input line");
+
+        Some(String::from(input.trim()))
+    }
 }
