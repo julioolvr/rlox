@@ -363,6 +363,27 @@ mod tests {
                 assert_eq!(token.token_type, TokenType::Identifier);
                 assert_eq!(token.lexeme, "my_var");
             }
+
+            mod keywords {
+                use super::*;
+
+                test_token!(and, "and", TokenType::And);
+                test_token!(class, "class", TokenType::Class);
+                test_token!(else_token, "else", TokenType::Else);
+                test_token!(false_token, "false", TokenType::False);
+                test_token!(for_token, "for", TokenType::For);
+                test_token!(fun, "fun", TokenType::Fun);
+                test_token!(if_token, "if", TokenType::If);
+                test_token!(nil, "nil", TokenType::Nil);
+                test_token!(or, "or", TokenType::Or);
+                test_token!(print, "print", TokenType::Print);
+                test_token!(return_token, "return", TokenType::Return);
+                test_token!(super_token, "super", TokenType::Super);
+                test_token!(this, "this", TokenType::This);
+                test_token!(true_token, "true", TokenType::True);
+                test_token!(var, "var", TokenType::Var);
+                test_token!(while_token, "while", TokenType::While);
+            }
         }
     }
 }
