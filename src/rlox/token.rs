@@ -12,7 +12,7 @@ pub struct Token {
     pub token_type: TokenType,
     pub literal: Literal,
     pub lexeme: String,
-    line: usize,
+    pub line: usize,
 }
 
 impl Token {

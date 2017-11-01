@@ -264,6 +264,19 @@ mod tests {
         assert_eq!(errors.len(), 1);
     }
 
+    #[test]
+    fn line_numbers() {
+        let scanner = Scanner::new("123.4\nsome_ident\n\"some string\"".to_string());
+        let (mut tokens, errors) = scanner.scan_tokens();
+
+        assert_eq!(errors.len(), 0);
+        tokens.pop(); // Remove the Eof token since we don't really care about its line number
+
+        for (i, token) in tokens.iter().enumerate() {
+            assert_eq!(token.line, i + 1);
+        }
+    }
+
     mod tokens {
         use super::*;
 
