@@ -46,16 +46,16 @@ impl CharScanner {
         let ch = self.source[self.current - 1];
 
         match ch {
-            '(' => Ok(self.build_current_token(TokenType::LeftParen)),
-            ')' => Ok(self.build_current_token(TokenType::RightParen)),
-            '{' => Ok(self.build_current_token(TokenType::LeftBrace)),
-            '}' => Ok(self.build_current_token(TokenType::RightBrace)),
-            ',' => Ok(self.build_current_token(TokenType::Comma)),
-            '.' => Ok(self.build_current_token(TokenType::Dot)),
-            '-' => Ok(self.build_current_token(TokenType::Minus)),
-            '+' => Ok(self.build_current_token(TokenType::Plus)),
-            ';' => Ok(self.build_current_token(TokenType::Semicolon)),
-            '*' => Ok(self.build_current_token(TokenType::Star)),
+            '(' => Ok(self.build_non_literal_token(TokenType::LeftParen)),
+            ')' => Ok(self.build_non_literal_token(TokenType::RightParen)),
+            '{' => Ok(self.build_non_literal_token(TokenType::LeftBrace)),
+            '}' => Ok(self.build_non_literal_token(TokenType::RightBrace)),
+            ',' => Ok(self.build_non_literal_token(TokenType::Comma)),
+            '.' => Ok(self.build_non_literal_token(TokenType::Dot)),
+            '-' => Ok(self.build_non_literal_token(TokenType::Minus)),
+            '+' => Ok(self.build_non_literal_token(TokenType::Plus)),
+            ';' => Ok(self.build_non_literal_token(TokenType::Semicolon)),
+            '*' => Ok(self.build_non_literal_token(TokenType::Star)),
             '!' => {
                 let token_type = if self.is_match('=') {
                     TokenType::BangEqual
@@ -63,7 +63,7 @@ impl CharScanner {
                     TokenType::Bang
                 };
 
-                Ok(self.build_current_token(token_type))
+                Ok(self.build_non_literal_token(token_type))
             }
             '=' => {
                 let token_type = if self.is_match('=') {
@@ -72,7 +72,7 @@ impl CharScanner {
                     TokenType::Equal
                 };
 
-                Ok(self.build_current_token(token_type))
+                Ok(self.build_non_literal_token(token_type))
             }
             '<' => {
                 let token_type = if self.is_match('=') {
@@ -81,7 +81,7 @@ impl CharScanner {
                     TokenType::Less
                 };
 
-                Ok(self.build_current_token(token_type))
+                Ok(self.build_non_literal_token(token_type))
             }
             '>' => {
                 let token_type = if self.is_match('=') {
@@ -90,7 +90,7 @@ impl CharScanner {
                     TokenType::Greater
                 };
 
-                Ok(self.build_current_token(token_type))
+                Ok(self.build_non_literal_token(token_type))
             }
             '/' => {
                 if self.is_match('/') {
@@ -100,7 +100,7 @@ impl CharScanner {
 
                     Ok(None)
                 } else {
-                    Ok(self.build_current_token(TokenType::Slash))
+                    Ok(self.build_non_literal_token(TokenType::Slash))
                 }
             }
             ' ' | '\r' | '\t' => Ok(None),
@@ -162,11 +162,11 @@ impl CharScanner {
         self.current >= self.source.len()
     }
 
-    fn build_current_token(&self, token_type: TokenType) -> Option<Token> {
-        self.build_token_with_literal(token_type, Literal::None)
+    fn build_non_literal_token(&self, token_type: TokenType) -> Option<Token> {
+        self.build_literal_token(token_type, Literal::None)
     }
 
-    fn build_token_with_literal(&self, token_type: TokenType, literal: Literal) -> Option<Token> {
+    fn build_literal_token(&self, token_type: TokenType, literal: Literal) -> Option<Token> {
         Some(Token::new(token_type, self.current_lexeme(), literal, self.line))
     }
 
@@ -192,7 +192,7 @@ impl CharScanner {
             .collect::<Vec<String>>()
             .join("");
 
-        Ok(self.build_token_with_literal(TokenType::String, Literal::String(literal)))
+        Ok(self.build_literal_token(TokenType::String, Literal::String(literal)))
     }
 
     fn scan_numeric_literal(&mut self) -> Result<Option<Token>, Error> {
@@ -210,7 +210,7 @@ impl CharScanner {
         }
 
         let literal = self.current_lexeme().parse::<f64>().unwrap();
-        Ok(self.build_token_with_literal(TokenType::Number, Literal::Number(literal)))
+        Ok(self.build_literal_token(TokenType::Number, Literal::Number(literal)))
     }
 
     fn scan_identifier(&mut self) -> Result<Option<Token>, Error> {
@@ -222,6 +222,6 @@ impl CharScanner {
             .get(self.current_lexeme().as_str())
             .map_or(TokenType::Identifier, |&token_type| token_type);
 
-        Ok(self.build_current_token(token_type))
+        Ok(self.build_non_literal_token(token_type))
     }
 }
