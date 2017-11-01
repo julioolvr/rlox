@@ -282,6 +282,19 @@ mod tests {
             }
         }
 
+        macro_rules! test_no_token {
+            ($name:ident, $code:expr) => {
+                #[test]
+                fn $name() {
+                    let scanner = Scanner::new($code.to_string());
+                    let (tokens, errors) = scanner.scan_tokens();
+
+                    assert_eq!(errors.len(), 0);
+                    assert_eq!(tokens.len(), 1); // Single eof token
+                }
+            }
+        }
+
         test_token!(left_paren, "(", TokenType::LeftParen);
         test_token!(right_paren, ")", TokenType::RightParen);
         test_token!(left_brace, "{", TokenType::LeftBrace);
@@ -301,5 +314,7 @@ mod tests {
         test_token!(greater, ">", TokenType::Greater);
         test_token!(greater_equal, ">=", TokenType::GreaterEqual);
         test_token!(slash, "/", TokenType::Slash);
+        test_no_token!(comments, "// some comment");
+        test_no_token!(white_space, "\n\r \t");
     }
 }
