@@ -53,7 +53,7 @@ impl CharScanner {
             }
         }
 
-        tokens.push(Token::new(TokenType::EOF, "".to_string(), "".to_string(), 0));
+        tokens.push(Token::new(TokenType::EOF, "".to_string(), "".to_string(), self.line));
         (tokens, errors)
     }
 
