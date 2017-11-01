@@ -1,4 +1,4 @@
-use rlox::token::{Token, TokenType};
+use rlox::token::{Token, TokenType, Literal};
 use rlox::errors::Error;
 
 pub struct Scanner {
@@ -53,7 +53,7 @@ impl CharScanner {
             }
         }
 
-        tokens.push(Token::new(TokenType::EOF, "".to_string(), "".to_string(), self.line));
+        tokens.push(Token::new(TokenType::EOF, "".to_string(), Literal::None, self.line));
         (tokens, errors)
     }
 
@@ -124,6 +124,9 @@ impl CharScanner {
                 Ok(None)
             }
             '"' => self.scan_string_literal(),
+            '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '0' => {
+                self.scan_numeric_literal()
+            }
             unknown_char => {
                 Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
             }
@@ -151,6 +154,14 @@ impl CharScanner {
         }
     }
 
+    fn peek_next(&self) -> char {
+        if self.current >= self.source.len() + 1 {
+            '\0'
+        } else {
+            self.source[self.current + 1]
+        }
+    }
+
     fn advance(&mut self) {
         self.current += 1;
     }
@@ -168,10 +179,10 @@ impl CharScanner {
     }
 
     fn build_current_token(&self, token_type: TokenType) -> Option<Token> {
-        self.build_token_with_literal(token_type, "".to_string())
+        self.build_token_with_literal(token_type, Literal::None)
     }
 
-    fn build_token_with_literal(&self, token_type: TokenType, literal: String) -> Option<Token> {
+    fn build_token_with_literal(&self, token_type: TokenType, literal: Literal) -> Option<Token> {
         Some(Token::new(token_type, self.current_lexeme(), literal, self.line))
     }
 
@@ -197,6 +208,24 @@ impl CharScanner {
             .collect::<Vec<String>>()
             .join("");
 
-        Ok(self.build_token_with_literal(TokenType::STRING, literal))
+        Ok(self.build_token_with_literal(TokenType::STRING, Literal::String(literal)))
+    }
+
+    fn scan_numeric_literal(&mut self) -> Result<Option<Token>, Error> {
+        while self.peek().is_digit(10) {
+            self.advance();
+        }
+
+        if self.peek() == '.' && self.peek_next().is_digit(10) {
+            // Consume the .
+            self.advance();
+
+            while self.peek().is_digit(10) {
+                self.advance();
+            }
+        }
+
+        let literal = self.current_lexeme().parse::<f64>().unwrap();
+        Ok(self.build_token_with_literal(TokenType::NUMBER, Literal::Number(literal)))
     }
 }

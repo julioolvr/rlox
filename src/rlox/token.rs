@@ -1,13 +1,20 @@
 #[derive(Debug)]
+pub enum Literal {
+    Number(f64),
+    String(String),
+    None,
+}
+
+#[derive(Debug)]
 pub struct Token {
     token_type: TokenType,
     lexeme: String,
-    literal: String, // TODO: This has to be something else, maybe Box<T>?
+    literal: Literal,
     line: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: String, line: usize) -> Token {
+    pub fn new(token_type: TokenType, lexeme: String, literal: Literal, line: usize) -> Token {
         Token {
             token_type,
             lexeme,
