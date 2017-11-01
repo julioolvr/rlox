@@ -125,7 +125,7 @@ impl CharScanner {
             }
             '"' => self.scan_string_literal(),
             '0'...'9' => self.scan_numeric_literal(),
-
+            'a'...'z' | 'A'...'Z' | '_' => self.scan_identifier(),
             unknown_char => {
                 Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
             }
@@ -226,5 +226,13 @@ impl CharScanner {
 
         let literal = self.current_lexeme().parse::<f64>().unwrap();
         Ok(self.build_token_with_literal(TokenType::NUMBER, Literal::Number(literal)))
+    }
+
+    fn scan_identifier(&mut self) -> Result<Option<Token>, Error> {
+        while self.peek().is_alphanumeric() {
+            self.advance();
+        }
+
+        Ok(self.build_current_token(TokenType::IDENTIFIER))
     }
 }
