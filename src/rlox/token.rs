@@ -9,7 +9,7 @@ pub enum Literal {
 
 #[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
+    pub token_type: TokenType,
     lexeme: String,
     literal: Literal,
     line: usize,
@@ -26,7 +26,7 @@ impl Token {
     }
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug,Clone,Copy,PartialEq)]
 pub enum TokenType {
     // Single-character tokens.
     LeftParen,

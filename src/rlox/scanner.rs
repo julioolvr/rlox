@@ -240,3 +240,66 @@ impl CharScanner {
         Ok(self.build_current_token(token_type))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn has_only_eof_token_for_empty_source() {
+        let scanner = Scanner::new("".to_string());
+        let (tokens, errors) = scanner.scan_tokens();
+
+        assert_eq!(errors.len(), 0);
+        assert_eq!(tokens.len(), 1);
+        let token = tokens.get(0).unwrap();
+        assert_eq!(token.token_type, TokenType::Eof);
+    }
+
+    #[test]
+    fn error_on_unknown_character() {
+        let scanner = Scanner::new("%".to_string());
+        let (tokens, errors) = scanner.scan_tokens();
+        assert_eq!(tokens.len(), 1); // Eof token
+        assert_eq!(errors.len(), 1);
+    }
+
+    mod tokens {
+        use super::*;
+
+        macro_rules! test_token {
+            ($name:ident, $code:expr, $token_type:expr) => {
+                #[test]
+                fn $name() {
+                    let scanner = Scanner::new($code.to_string());
+                    let (tokens, errors) = scanner.scan_tokens();
+
+                    assert_eq!(errors.len(), 0);
+                    let token = tokens.get(0).unwrap();
+
+                    assert_eq!(token.token_type, $token_type);
+                }
+            }
+        }
+
+        test_token!(left_paren, "(", TokenType::LeftParen);
+        test_token!(right_paren, ")", TokenType::RightParen);
+        test_token!(left_brace, "{", TokenType::LeftBrace);
+        test_token!(right_brace, "}", TokenType::RightBrace);
+        test_token!(comma, ",", TokenType::Comma);
+        test_token!(dot, ".", TokenType::Dot);
+        test_token!(minus, "-", TokenType::Minus);
+        test_token!(plus, "+", TokenType::Plus);
+        test_token!(semicolon, ";", TokenType::Semicolon);
+        test_token!(star, "*", TokenType::Star);
+        test_token!(bang, "!", TokenType::Bang);
+        test_token!(bang_equal, "!=", TokenType::BangEqual);
+        test_token!(equal, "=", TokenType::Equal);
+        test_token!(equal_equal, "==", TokenType::EqualEqual);
+        test_token!(less, "<", TokenType::Less);
+        test_token!(less_equal, "<=", TokenType::LessEqual);
+        test_token!(greater, ">", TokenType::Greater);
+        test_token!(greater_equal, ">=", TokenType::GreaterEqual);
+        test_token!(slash, "/", TokenType::Slash);
+    }
+}
