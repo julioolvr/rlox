@@ -1,4 +1,4 @@
-use rlox::token::{Token, TokenType, Literal};
+use rlox::token::{Token, TokenType, Literal, KEYWORDS};
 use rlox::errors::Error;
 
 pub struct Scanner {
@@ -233,6 +233,10 @@ impl CharScanner {
             self.advance();
         }
 
-        Ok(self.build_current_token(TokenType::Identifier))
+        let token_type = KEYWORDS
+            .get(self.current_lexeme().as_str())
+            .map_or(TokenType::Identifier, |&token_type| token_type);
+
+        Ok(self.build_current_token(token_type))
     }
 }

@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 mod rlox;
 use std::env;
 
