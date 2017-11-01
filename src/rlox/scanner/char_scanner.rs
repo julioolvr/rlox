@@ -26,14 +26,10 @@ impl CharScanner {
             self.start = self.current;
 
             self.advance();
-            let token = self.scan_token();
 
-            match token {
-                Ok(token) => {
-                    if let Some(token) = token {
-                        tokens.push(token)
-                    }
-                }
+            match self.scan_token() {
+                Ok(Some(token)) => tokens.push(token),
+                Ok(None) => {}
                 Err(err) => errors.push(err),
             }
         }
