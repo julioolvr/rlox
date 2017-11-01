@@ -118,6 +118,11 @@ impl CharScanner {
                     Ok(self.build_current_token(TokenType::SLASH))
                 }
             }
+            ' ' | '\r' | '\t' => Ok(None),
+            '\n' => {
+                self.line += 1;
+                Ok(None)
+            }
             unknown_char => {
                 Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
             }
