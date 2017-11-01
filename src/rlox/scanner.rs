@@ -124,9 +124,8 @@ impl CharScanner {
                 Ok(None)
             }
             '"' => self.scan_string_literal(),
-            '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '0' => {
-                self.scan_numeric_literal()
-            }
+            '0'...'9' => self.scan_numeric_literal(),
+
             unknown_char => {
                 Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
             }
