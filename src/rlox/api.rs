@@ -34,7 +34,7 @@ pub fn run_repl() {
 
 fn run(code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
-    let (tokens, mut errors) = scanner.scan_tokens();
+    let (tokens, errors) = scanner.scan_tokens();
 
     for ref token in tokens {
         println!("{:?}", token);
