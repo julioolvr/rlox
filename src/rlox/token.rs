@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum Literal {
     Number(f64),
     String(String),
@@ -10,8 +10,8 @@ pub enum Literal {
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
+    pub literal: Literal,
     lexeme: String,
-    literal: Literal,
     line: usize,
 }
 

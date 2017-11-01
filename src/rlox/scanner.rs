@@ -316,5 +316,41 @@ mod tests {
         test_token!(slash, "/", TokenType::Slash);
         test_no_token!(comments, "// some comment");
         test_no_token!(white_space, "\n\r \t");
+
+        mod literals {
+            use super::*;
+
+            #[test]
+            fn string() {
+                let scanner = Scanner::new("\"some string\"".to_string());
+                let (tokens, errors) = scanner.scan_tokens();
+
+                assert_eq!(errors.len(), 0);
+                let token = tokens.get(0).unwrap();
+
+                assert_eq!(token.token_type, TokenType::String);
+
+                match token.literal {
+                    Literal::String(ref value) => assert_eq!(value, "some string"),
+                    _ => assert!(false, "Should be a Literal::String"),
+                }
+            }
+
+            #[test]
+            fn number() {
+                let scanner = Scanner::new("123.45".to_string());
+                let (tokens, errors) = scanner.scan_tokens();
+
+                assert_eq!(errors.len(), 0);
+                let token = tokens.get(0).unwrap();
+
+                assert_eq!(token.token_type, TokenType::Number);
+
+                match token.literal {
+                    Literal::Number(value) => assert_eq!(value, 123.45),
+                    _ => assert!(false, "Should be a Literal::Number"),
+                }
+            }
+        }
     }
 }
