@@ -123,6 +123,7 @@ impl CharScanner {
                 self.line += 1;
                 Ok(None)
             }
+            '"' => self.scan_string_literal(),
             unknown_char => {
                 Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
             }
@@ -167,6 +168,35 @@ impl CharScanner {
     }
 
     fn build_current_token(&self, token_type: TokenType) -> Option<Token> {
-        Some(Token::new(token_type, self.current_lexeme(), "".to_string(), self.line))
+        self.build_token_with_literal(token_type, "".to_string())
+    }
+
+    fn build_token_with_literal(&self, token_type: TokenType, literal: String) -> Option<Token> {
+        Some(Token::new(token_type, self.current_lexeme(), literal, self.line))
+    }
+
+    fn scan_string_literal(&mut self) -> Result<Option<Token>, Error> {
+        while self.peek() != '"' && !self.is_eof() {
+            if self.peek() == '\n' {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        if self.is_eof() {
+            return Err(Error::ScannerError(self.line, "Unterminated string".to_string()));
+        }
+
+        // Once more to cover the closing "
+        self.advance();
+
+        let literal = self.source[self.start + 1..self.current - 1]
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<String>>()
+            .join("");
+
+        Ok(self.build_token_with_literal(TokenType::STRING, literal))
     }
 }
