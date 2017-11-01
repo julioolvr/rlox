@@ -11,7 +11,7 @@ pub enum Literal {
 pub struct Token {
     pub token_type: TokenType,
     pub literal: Literal,
-    lexeme: String,
+    pub lexeme: String,
     line: usize,
 }
 

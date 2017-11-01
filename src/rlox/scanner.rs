@@ -229,7 +229,7 @@ impl CharScanner {
     }
 
     fn scan_identifier(&mut self) -> Result<Option<Token>, Error> {
-        while self.peek().is_alphanumeric() {
+        while self.peek().is_alphanumeric() || self.peek() == '_' {
             self.advance();
         }
 
@@ -350,6 +350,18 @@ mod tests {
                     Literal::Number(value) => assert_eq!(value, 123.45),
                     _ => assert!(false, "Should be a Literal::Number"),
                 }
+            }
+
+            #[test]
+            fn identifier() {
+                let scanner = Scanner::new("my_var".to_string());
+                let (tokens, errors) = scanner.scan_tokens();
+
+                assert_eq!(errors.len(), 0);
+                let token = tokens.get(0).unwrap();
+
+                assert_eq!(token.token_type, TokenType::Identifier);
+                assert_eq!(token.lexeme, "my_var");
             }
         }
     }
