@@ -36,8 +36,8 @@ pub fn run_repl() {
 fn run(code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
     let (tokens, scanner_errors) = scanner.scan_tokens();
-    let mut parser = Parser::new(tokens);
-    let ast = parser.expression();
+    let parser = Parser::new(tokens);
+    let ast = parser.ast();
 
     if scanner_errors.len() > 0 {
         return Err(scanner_errors);
