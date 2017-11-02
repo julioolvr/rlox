@@ -1,3 +1,4 @@
+use std;
 use std::collections::HashMap;
 
 #[derive(Debug,PartialEq)]
@@ -5,6 +6,16 @@ pub enum Literal {
     Number(f64),
     String(String),
     None,
+}
+
+impl std::fmt::Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Literal::Number(ref number) => write!(f, "{}", number),
+            Literal::String(ref string) => write!(f, "{}", string),
+            Literal::None => f.write_str("NoneLiteral"),
+        }
+    }
 }
 
 #[derive(Debug)]
