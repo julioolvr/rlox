@@ -1,10 +1,12 @@
 use std;
 use std::collections::HashMap;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug,PartialEq,Clone)]
 pub enum Literal {
     Number(f64),
     String(String),
+    Bool(bool),
+    Nil,
     None,
 }
 
@@ -13,12 +15,14 @@ impl std::fmt::Display for Literal {
         match *self {
             Literal::Number(ref number) => write!(f, "{}", number),
             Literal::String(ref string) => write!(f, "{}", string),
+            Literal::Bool(ref b) => write!(f, "{}", b),
+            Literal::Nil => write!(f, "Nil"),
             Literal::None => f.write_str("NoneLiteral"),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: Literal,

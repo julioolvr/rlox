@@ -4,6 +4,7 @@ use std::io::Write;
 use std::fs::File;
 
 use rlox::scanner::Scanner;
+use rlox::parser::Parser;
 use rlox::errors::Error;
 
 pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
@@ -34,16 +35,20 @@ pub fn run_repl() {
 
 fn run(code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
-    let (tokens, errors) = scanner.scan_tokens();
+    let (tokens, scanner_errors) = scanner.scan_tokens();
+    let mut parser = Parser::new(tokens);
+    let ast = parser.expression();
 
-    for ref token in tokens {
-        println!("{:?}", token);
+    if scanner_errors.len() > 0 {
+        return Err(scanner_errors);
     }
 
-    if errors.len() == 0 {
-        Ok(())
-    } else {
-        Err(errors)
+    match ast {
+        Ok(ast) => {
+            println!("{}", ast);
+            Ok(())
+        }
+        Err(err) => Err(vec![err]),
     }
 }
 
