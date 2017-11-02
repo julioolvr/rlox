@@ -98,20 +98,11 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, Error> {
-        // TODO: Extract the literals from the tokens?
-        if self.next_is(vec![TokenType::False]) {
-            return Ok(Expr::Literal(Literal::Bool(false)));
-        }
-
-        if self.next_is(vec![TokenType::True]) {
-            return Ok(Expr::Literal(Literal::Bool(true)));
-        }
-
-        if self.next_is(vec![TokenType::Nil]) {
-            return Ok(Expr::Literal(Literal::Nil));
-        }
-
-        if self.next_is(vec![TokenType::Number, TokenType::String]) {
+        if self.next_is(vec![TokenType::Number,
+                             TokenType::String,
+                             TokenType::False,
+                             TokenType::True,
+                             TokenType::Nil]) {
             return Ok(Expr::Literal(self.previous().literal.clone()));
         }
 

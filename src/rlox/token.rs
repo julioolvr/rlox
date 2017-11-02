@@ -16,7 +16,7 @@ impl std::fmt::Display for Literal {
             Literal::Number(ref number) => write!(f, "{}", number),
             Literal::String(ref string) => write!(f, "{}", string),
             Literal::Bool(ref b) => write!(f, "{}", b),
-            Literal::Nil => write!(f, "Nil"),
+            Literal::Nil => write!(f, "nil"),
             Literal::None => f.write_str("NoneLiteral"),
         }
     }

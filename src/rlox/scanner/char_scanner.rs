@@ -218,6 +218,13 @@ impl CharScanner {
             .get(self.current_lexeme().as_str())
             .map_or(TokenType::Identifier, |&token_type| token_type);
 
-        Ok(self.build_non_literal_token(token_type))
+        let literal = match token_type {
+            TokenType::False => Literal::Bool(false),
+            TokenType::True => Literal::Bool(true),
+            TokenType::Nil => Literal::Nil,
+            _ => Literal::None,
+        };
+
+        Ok(self.build_literal_token(token_type, literal))
     }
 }
