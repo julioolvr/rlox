@@ -12,7 +12,41 @@ impl TokenParser {
         TokenParser { tokens, current: 0 }
     }
 
-    pub fn expression(&mut self) -> Result<Expr, ParsingError> {
+    pub fn parse(&mut self) -> Result<Vec<Expr>, Vec<ParsingError>> {
+        let mut statements: Vec<Expr> = Vec::new();
+        let mut errors: Vec<ParsingError> = Vec::new();
+
+        while !self.is_over() {
+            match self.statement() {
+                Ok(expr) => statements.push(expr),
+                Err(err) => errors.push(err),
+            }
+        }
+
+        if errors.len() == 0 {
+            Ok(statements)
+        } else {
+            Err(errors)
+        }
+    }
+
+    fn statement(&mut self) -> Result<Expr, ParsingError> {
+        self.expression_statement()
+    }
+
+    fn expression_statement(&mut self) -> Result<Expr, ParsingError> {
+        let expr = self.expression()?;
+
+        if let Some(err) =
+            self.consume(TokenType::Semicolon,
+                         "Expect ';' after expression.".to_string()) {
+            Err(err)
+        } else {
+            Ok(expr)
+        }
+    }
+
+    fn expression(&mut self) -> Result<Expr, ParsingError> {
         self.equality()
     }
 

@@ -16,7 +16,7 @@ impl Parser {
         Parser { tokens }
     }
 
-    pub fn ast(&self) -> Result<Expr, ParsingError> {
-        TokenParser::new(self.tokens.clone()).expression()
+    pub fn ast(&self) -> Result<Vec<Expr>, Vec<ParsingError>> {
+        TokenParser::new(self.tokens.clone()).parse()
     }
 }

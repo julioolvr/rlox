@@ -51,9 +51,11 @@ fn run(code: String) -> Result<(), Vec<Error>> {
 
     match ast {
         Ok(ast) => {
-            println!("{}", ast);
+            for stmt in ast.iter() {
+                println!("{}", stmt);
+            }
 
-            match Interpreter::interpret(&ast) {
+            match Interpreter::interpret(ast.first().unwrap()) {
                 Ok(result) => {
                     println!("{}", result);
                     Ok(())
@@ -61,7 +63,12 @@ fn run(code: String) -> Result<(), Vec<Error>> {
                 Err(err) => Err(vec![Error::Runtime(err)]),
             }
         }
-        Err(err) => Err(vec![Error::Parser(err)]),
+        Err(errors) => {
+            Err(errors
+                    .into_iter()
+                    .map(|err| Error::Parser(err))
+                    .collect())
+        }
     }
 }
 
