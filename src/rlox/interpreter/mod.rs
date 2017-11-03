@@ -1,4 +1,4 @@
-mod errors;
+pub mod errors;
 
 use self::errors::RuntimeError;
 use rlox::lox_value::{LoxValue, ValueError};

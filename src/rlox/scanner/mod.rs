@@ -1,7 +1,8 @@
 mod char_scanner;
+pub mod errors;
 
 use rlox::token::Token;
-use rlox::errors::Error;
+use self::errors::ScannerError;
 use self::char_scanner::CharScanner;
 
 pub struct Scanner {
@@ -13,7 +14,7 @@ impl Scanner {
         Scanner { source }
     }
 
-    pub fn scan_tokens(&self) -> (Vec<Token>, Vec<Error>) {
+    pub fn scan_tokens(&self) -> (Vec<Token>, Vec<ScannerError>) {
         let mut scanner = CharScanner::new(self.source.chars().collect());
         scanner.scan_tokens()
     }

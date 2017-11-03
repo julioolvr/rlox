@@ -41,7 +41,10 @@ fn run(code: String) -> Result<(), Vec<Error>> {
     let ast = parser.ast();
 
     if scanner_errors.len() > 0 {
-        return Err(scanner_errors);
+        return Err(scanner_errors
+                       .into_iter()
+                       .map(|err| Error::Scanner(err))
+                       .collect());
     }
 
     match ast {
@@ -50,12 +53,12 @@ fn run(code: String) -> Result<(), Vec<Error>> {
 
             match Interpreter::interpret(&ast) {
                 Ok(result) => println!("{}", result),
-                Err(err) => println!("{}", err),
+                Err(err) => println!("{}", Error::Runtime(err)),
             }
 
             Ok(())
         }
-        Err(err) => Err(vec![err]),
+        Err(err) => Err(vec![Error::Parser(err)]),
     }
 }
 

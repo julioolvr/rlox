@@ -1,5 +1,5 @@
 use rlox::token::{Token, TokenType};
-use rlox::errors::Error;
+use rlox::parser::errors::ParsingError;
 use rlox::parser::Expr;
 
 pub struct TokenParser {
@@ -12,11 +12,11 @@ impl TokenParser {
         TokenParser { tokens, current: 0 }
     }
 
-    pub fn expression(&mut self) -> Result<Expr, Error> {
+    pub fn expression(&mut self) -> Result<Expr, ParsingError> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Result<Expr, Error> {
+    fn equality(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.comparison()?;
 
         while self.next_is(vec![TokenType::BangEqual, TokenType::EqualEqual]) {
@@ -28,7 +28,7 @@ impl TokenParser {
         Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<Expr, Error> {
+    fn comparison(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.addition()?;
 
         while self.next_is(vec![TokenType::Greater,
@@ -43,7 +43,7 @@ impl TokenParser {
         Ok(expr)
     }
 
-    fn addition(&mut self) -> Result<Expr, Error> {
+    fn addition(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.multiplication()?;
 
         while self.next_is(vec![TokenType::Minus, TokenType::Plus]) {
@@ -55,7 +55,7 @@ impl TokenParser {
         Ok(expr)
     }
 
-    fn multiplication(&mut self) -> Result<Expr, Error> {
+    fn multiplication(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.unary()?;
 
         while self.next_is(vec![TokenType::Slash, TokenType::Star]) {
@@ -67,7 +67,7 @@ impl TokenParser {
         Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<Expr, Error> {
+    fn unary(&mut self) -> Result<Expr, ParsingError> {
         if self.next_is(vec![TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous().clone();
             let right = self.unary()?;
@@ -77,7 +77,7 @@ impl TokenParser {
         self.primary()
     }
 
-    fn primary(&mut self) -> Result<Expr, Error> {
+    fn primary(&mut self) -> Result<Expr, ParsingError> {
         if self.next_is(vec![TokenType::Number,
                              TokenType::String,
                              TokenType::False,
@@ -99,9 +99,10 @@ impl TokenParser {
         }
 
         if self.is_over() {
-            Err(Error::UnexpectedEofError)
+            Err(ParsingError::UnexpectedEofError)
         } else {
-            Err(Error::UnexpectedTokenError(self.peek().clone(), "Unexpected token".to_string()))
+            Err(ParsingError::UnexpectedTokenError(self.peek().clone(),
+                                                   "Unexpected token".to_string()))
         }
 
     }
@@ -146,12 +147,12 @@ impl TokenParser {
         self.tokens.get(self.current - 1).unwrap()
     }
 
-    fn consume(&mut self, token_type: TokenType, message: String) -> Option<Error> {
+    fn consume(&mut self, token_type: TokenType, message: String) -> Option<ParsingError> {
         if self.check(token_type) {
             self.advance();
             None
         } else {
-            Some(Error::UnexpectedTokenError(self.peek().clone(), message))
+            Some(ParsingError::UnexpectedTokenError(self.peek().clone(), message))
         }
     }
 }

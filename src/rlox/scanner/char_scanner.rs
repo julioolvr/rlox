@@ -1,5 +1,5 @@
 use rlox::token::{Token, TokenType, Literal, KEYWORDS};
-use rlox::errors::Error;
+use rlox::scanner::errors::ScannerError;
 
 pub struct CharScanner {
     source: Vec<char>,
@@ -18,8 +18,8 @@ impl CharScanner {
         }
     }
 
-    pub fn scan_tokens(&mut self) -> (Vec<Token>, Vec<Error>) {
-        let mut errors: Vec<Error> = Vec::new();
+    pub fn scan_tokens(&mut self) -> (Vec<Token>, Vec<ScannerError>) {
+        let mut errors: Vec<ScannerError> = Vec::new();
         let mut tokens: Vec<Token> = Vec::new();
 
         while !self.is_eof() {
@@ -38,7 +38,7 @@ impl CharScanner {
         (tokens, errors)
     }
 
-    fn scan_token(&mut self) -> Result<Option<Token>, Error> {
+    fn scan_token(&mut self) -> Result<Option<Token>, ScannerError> {
         let ch = self.source[self.current - 1];
 
         match ch {
@@ -108,7 +108,8 @@ impl CharScanner {
             '0'...'9' => self.scan_numeric_literal(),
             'a'...'z' | 'A'...'Z' | '_' => self.scan_identifier(),
             unknown_char => {
-                Err(Error::ScannerError(self.line, format!("Invalid character: {}", unknown_char)))
+                Err(ScannerError::ScannerError(self.line,
+                                               format!("Invalid character: {}", unknown_char)))
             }
         }
     }
@@ -166,7 +167,7 @@ impl CharScanner {
         Some(Token::new(token_type, self.current_lexeme(), literal, self.line))
     }
 
-    fn scan_string_literal(&mut self) -> Result<Option<Token>, Error> {
+    fn scan_string_literal(&mut self) -> Result<Option<Token>, ScannerError> {
         while self.peek() != '"' && !self.is_eof() {
             if self.peek() == '\n' {
                 self.line += 1;
@@ -176,7 +177,7 @@ impl CharScanner {
         }
 
         if self.is_eof() {
-            return Err(Error::ScannerError(self.line, "Unterminated string".to_string()));
+            return Err(ScannerError::ScannerError(self.line, "Unterminated string".to_string()));
         }
 
         // Once more to cover the closing "
@@ -191,7 +192,7 @@ impl CharScanner {
         Ok(self.build_literal_token(TokenType::String, Literal::String(literal)))
     }
 
-    fn scan_numeric_literal(&mut self) -> Result<Option<Token>, Error> {
+    fn scan_numeric_literal(&mut self) -> Result<Option<Token>, ScannerError> {
         while self.peek().is_digit(10) {
             self.advance();
         }
@@ -209,7 +210,7 @@ impl CharScanner {
         Ok(self.build_literal_token(TokenType::Number, Literal::Number(literal)))
     }
 
-    fn scan_identifier(&mut self) -> Result<Option<Token>, Error> {
+    fn scan_identifier(&mut self) -> Result<Option<Token>, ScannerError> {
         while self.peek().is_alphanumeric() || self.peek() == '_' {
             self.advance();
         }

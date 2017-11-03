@@ -1,27 +1,22 @@
 use std;
-use rlox::token::Token;
+
+use rlox::scanner::errors::ScannerError;
+use rlox::parser::errors::ParsingError;
+use rlox::interpreter::errors::RuntimeError;
 
 #[derive(Debug)]
 pub enum Error {
-    ScannerError(usize, String),
-    UnexpectedTokenError(Token, String),
-    UnexpectedEofError,
+    Scanner(ScannerError),
+    Parser(ParsingError),
+    Runtime(RuntimeError),
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Error::ScannerError(ref line, ref message) => {
-                write!(f, "[line {}] ScannerError: {}", line, message)
-            }
-            Error::UnexpectedTokenError(ref token, ref message) => {
-                write!(f,
-                       "[line {}] UnexpectedTokenError: {} {}",
-                       token.line,
-                       message,
-                       token.lexeme)
-            }
-            Error::UnexpectedEofError => f.write_str("Unexpected end of input"),
+            Error::Scanner(ref err) => write!(f, "{}", err),
+            Error::Parser(ref err) => write!(f, "{}", err),
+            Error::Runtime(ref err) => write!(f, "{}", err),
         }
     }
 }
@@ -29,9 +24,9 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::ScannerError(_, _) => "ScannerError",
-            Error::UnexpectedTokenError(_, _) => "UnexpectedTokenError",
-            Error::UnexpectedEofError => "UnexpectedEofError",
+            Error::Scanner(_) => "Error::Scanner",
+            Error::Parser(_) => "Error::Parser",
+            Error::Runtime(_) => "Error::Runtime",
         }
     }
 }

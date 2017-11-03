@@ -1,8 +1,9 @@
 mod token_parser;
+pub mod errors;
 pub mod expr;
 
 use rlox::token::Token;
-use rlox::errors::Error;
+use self::errors::ParsingError;
 use self::expr::Expr;
 use self::token_parser::TokenParser;
 
@@ -15,7 +16,7 @@ impl Parser {
         Parser { tokens }
     }
 
-    pub fn ast(&self) -> Result<Expr, Error> {
+    pub fn ast(&self) -> Result<Expr, ParsingError> {
         TokenParser::new(self.tokens.clone()).expression()
     }
 }
