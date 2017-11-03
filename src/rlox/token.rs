@@ -1,5 +1,6 @@
 use std;
 use std::collections::HashMap;
+use rlox::lox_value::LoxValue;
 
 #[derive(Debug,PartialEq,Clone)]
 pub enum Literal {
@@ -18,6 +19,18 @@ impl std::fmt::Display for Literal {
             Literal::Bool(ref b) => write!(f, "{}", b),
             Literal::Nil => write!(f, "nil"),
             Literal::None => f.write_str("NoneLiteral"),
+        }
+    }
+}
+
+impl Literal {
+    pub fn value(&self) -> Option<LoxValue> {
+        match *self {
+            Literal::Number(number) => Some(LoxValue::Number(number)),
+            Literal::String(ref string) => Some(LoxValue::String(string.clone())),
+            Literal::Bool(b) => Some(LoxValue::Bool(b)),
+            Literal::Nil => Some(LoxValue::Nil),
+            Literal::None => None,
         }
     }
 }
