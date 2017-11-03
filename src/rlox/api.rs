@@ -51,7 +51,7 @@ fn run(code: String) -> Result<(), Vec<Error>> {
 
     match ast {
         Ok(ast) => {
-            match Interpreter::interpret_statement(ast.first().unwrap()) {
+            match Interpreter::interpret(ast.first().unwrap()) {
                 Some(err) => Err(vec![Error::Runtime(err)]),
                 None => Ok(()),
             }

@@ -8,10 +8,10 @@ use rlox::token::TokenType;
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret_statement(stmt: &Stmt) -> Option<RuntimeError> {
+    pub fn interpret(stmt: &Stmt) -> Option<RuntimeError> {
         match *stmt {
             Stmt::Print(ref expr) => {
-                match Interpreter::interpret(expr) {
+                match Interpreter::interpret_expr(expr) {
                     Ok(val) => {
                         println!("{}", val);
                         None
@@ -20,7 +20,7 @@ impl Interpreter {
                 }
             }
             Stmt::Expr(ref expr) => {
-                match Interpreter::interpret(expr) {
+                match Interpreter::interpret_expr(expr) {
                     Ok(_) => None,
                     Err(err) => Some(err),
                 }
@@ -28,7 +28,7 @@ impl Interpreter {
         }
     }
 
-    fn interpret(expr: &Expr) -> Result<LoxValue, RuntimeError> {
+    fn interpret_expr(expr: &Expr) -> Result<LoxValue, RuntimeError> {
         match *expr {
             Expr::Literal(ref literal) => {
                 if let Some(value) = literal.value() {
@@ -37,9 +37,9 @@ impl Interpreter {
                     Err(RuntimeError::InternalError("Invalid literal - no value".to_string()))
                 }
             }
-            Expr::Grouping(ref expr) => Interpreter::interpret(expr),
+            Expr::Grouping(ref expr) => Interpreter::interpret_expr(expr),
             Expr::Unary(ref token, ref expr) => {
-                let value = Interpreter::interpret(expr)?;
+                let value = Interpreter::interpret_expr(expr)?;
 
                 match token.token_type {
                     TokenType::Minus => {
@@ -62,8 +62,8 @@ impl Interpreter {
                 }
             }
             Expr::Binary(ref left, ref operator, ref right) => {
-                let left_value = Interpreter::interpret(left)?;
-                let right_value = Interpreter::interpret(right)?;
+                let left_value = Interpreter::interpret_expr(left)?;
+                let right_value = Interpreter::interpret_expr(right)?;
 
                 match operator.token_type {
                     TokenType::Minus => {
