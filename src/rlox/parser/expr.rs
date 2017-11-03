@@ -30,7 +30,7 @@ impl Expr {
                 if let Some(value) = literal.value() {
                     Ok(value)
                 } else {
-                    Err(Error::Internal("Invalid literal - no value".to_string()))
+                    Err(Error::InternalError("Invalid literal - no value".to_string()))
                 }
             }
             Expr::Grouping(ref expr) => expr.value(),
@@ -38,9 +38,13 @@ impl Expr {
                 let value = expr.value()?;
 
                 match token.token_type {
-                    TokenType::Minus => value.negate_number(),
+                    TokenType::Minus => {
+                        value
+                            .negate_number()
+                            .map_err(|_| Error::NegateNonNumberError(token.clone()))
+                    }
                     TokenType::Bang => value.negate(),
-                    _ => Err(Error::Internal(format!("Invalid unary operator: {:?}", token))),
+                    _ => Err(Error::InternalError(format!("Invalid unary operator: {:?}", token))),
                 }
             }
             Expr::Binary(ref left, ref operator, ref right) => {
@@ -58,7 +62,10 @@ impl Expr {
                     TokenType::LessEqual => left_value.is_less_equal(right_value),
                     TokenType::BangEqual => left_value.is_not_equal(&right_value),
                     TokenType::EqualEqual => left_value.is_equal(&right_value),
-                    _ => Err(Error::Internal(format!("Invalid binary operator: {:?}", operator))),
+                    _ => {
+                        Err(Error::InternalError(format!("Invalid binary operator: {:?}",
+                                                         operator)))
+                    }
                 }
             }
         }

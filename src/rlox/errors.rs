@@ -6,7 +6,9 @@ pub enum Error {
     ScannerError(usize, String),
     UnexpectedTokenError(Token, String),
     UnexpectedEofError,
-    Internal(String),
+    InternalError(String),
+    NegateNonNumberError(Token),
+    TypeError,
 }
 
 impl std::fmt::Display for Error {
@@ -23,7 +25,15 @@ impl std::fmt::Display for Error {
                        token.lexeme)
             }
             Error::UnexpectedEofError => f.write_str("Unexpected end of input"),
-            Error::Internal(message) => write!(f, "Internal interpreter error: {}", message),
+            Error::InternalError(ref message) => {
+                write!(f, "Internal interpreter error: {}", message)
+            }
+            Error::NegateNonNumberError(ref token) => {
+                write!(f,
+                       "[line {}] Cannot negate a non-numerical value",
+                       token.line)
+            }
+            Error::TypeError => f.write_str("TypeError"),
         }
     }
 }
@@ -34,6 +44,9 @@ impl std::error::Error for Error {
             Error::ScannerError(_, _) => "ScannerError",
             Error::UnexpectedTokenError(_, _) => "UnexpectedTokenError",
             Error::UnexpectedEofError => "UnexpectedEofError",
+            Error::InternalError(_) => "InternalError",
+            Error::NegateNonNumberError(_) => "NegateNonNumberError",
+            Error::TypeError => "TypeError",
         }
     }
 }

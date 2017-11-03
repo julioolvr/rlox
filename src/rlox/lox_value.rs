@@ -34,7 +34,7 @@ impl LoxValue {
         if let LoxValue::Number(number) = *self {
             Ok(LoxValue::Number(-number))
         } else {
-            Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+            Err(Error::TypeError)
         }
     }
 
@@ -49,7 +49,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError) // TODO: Change for some InterpreterError
     }
 
     pub fn divide(&self, other: LoxValue) -> Result<LoxValue, Error> {
