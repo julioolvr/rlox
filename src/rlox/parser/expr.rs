@@ -62,7 +62,11 @@ impl Expr {
                             .divide(right_value)
                             .map_err(|_| Error::DivideNonNumbers(operator.clone()))
                     }
-                    TokenType::Star => left_value.multiply(right_value),
+                    TokenType::Star => {
+                        left_value
+                            .multiply(right_value)
+                            .map_err(|_| Error::MultiplyNonNumbers(operator.clone()))
+                    }
                     TokenType::Plus => left_value.plus(right_value),
                     TokenType::Greater => left_value.is_greater(right_value),
                     TokenType::GreaterEqual => left_value.is_greater_equal(right_value),

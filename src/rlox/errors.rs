@@ -11,6 +11,7 @@ pub enum Error {
     TypeError,
     SubtractNonNumbers(Token),
     DivideNonNumbers(Token),
+    MultiplyNonNumbers(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -46,6 +47,11 @@ impl std::fmt::Display for Error {
                        "[line {}] Both sides of a division must be numbers",
                        token.line)
             }
+            Error::MultiplyNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a multiplication must be numbers",
+                       token.line)
+            }
         }
     }
 }
@@ -61,6 +67,7 @@ impl std::error::Error for Error {
             Error::TypeError => "TypeError",
             Error::SubtractNonNumbers(_) => "SubtractNonNumbers",
             Error::DivideNonNumbers(_) => "DivideNonNumbers",
+            Error::MultiplyNonNumbers(_) => "MultiplyNonNumbers",
         }
     }
 }
