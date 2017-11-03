@@ -1,5 +1,7 @@
+mod errors;
+
 use std;
-use rlox::errors::Error;
+pub use self::errors::ValueError;
 
 #[derive(Debug, PartialEq)]
 pub enum LoxValue {
@@ -30,117 +32,117 @@ impl LoxValue {
         }
     }
 
-    pub fn negate_number(&self) -> Result<LoxValue, Error> {
+    pub fn negate_number(&self) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(number) = *self {
             Ok(LoxValue::Number(-number))
         } else {
-            Err(Error::TypeError)
+            Err(ValueError::TypeError)
         }
     }
 
-    pub fn negate(&self) -> Result<LoxValue, Error> {
+    pub fn negate(&self) -> Result<LoxValue, ValueError> {
         Ok(LoxValue::Bool(!self.is_truthy()))
     }
 
-    pub fn subtract(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn subtract(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Number(left_number - right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn divide(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn divide(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 if right_number != 0.0 {
                     return Ok(LoxValue::Number(left_number / right_number));
                 } else {
-                    return Err(Error::DivideByZero);
+                    return Err(ValueError::DivideByZero);
                 }
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn multiply(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn multiply(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Number(left_number * right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn plus(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn plus(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         match *self {
             LoxValue::Number(left_number) => {
                 if let LoxValue::Number(right_number) = other {
                     Ok(LoxValue::Number(left_number + right_number))
                 } else {
-                    Err(Error::TypeError)
+                    Err(ValueError::TypeError)
                 }
             }
             LoxValue::String(ref left_string) => {
                 if let LoxValue::String(right_string) = other {
                     Ok(LoxValue::String(format!("{}{}", left_string, right_string)))
                 } else {
-                    Err(Error::TypeError)
+                    Err(ValueError::TypeError)
                 }
             }
-            _ => Err(Error::TypeError),
+            _ => Err(ValueError::TypeError),
         }
     }
 
-    pub fn is_greater(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_greater(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Bool(left_number > right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn is_greater_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_greater_equal(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Bool(left_number >= right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn is_less(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_less(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Bool(left_number < right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn is_less_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_less_equal(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
                 return Ok(LoxValue::Bool(left_number <= right_number));
             }
         }
 
-        Err(Error::TypeError)
+        Err(ValueError::TypeError)
     }
 
-    pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
         Ok(LoxValue::Bool(self != other))
     }
 
-    pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, Error> {
+    pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
         Ok(LoxValue::Bool(self == other))
     }
 }

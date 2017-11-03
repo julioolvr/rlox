@@ -6,8 +6,6 @@ pub enum Error {
     ScannerError(usize, String),
     UnexpectedTokenError(Token, String),
     UnexpectedEofError,
-    TypeError,
-    DivideByZero,
 }
 
 impl std::fmt::Display for Error {
@@ -24,8 +22,6 @@ impl std::fmt::Display for Error {
                        token.lexeme)
             }
             Error::UnexpectedEofError => f.write_str("Unexpected end of input"),
-            Error::TypeError => f.write_str("TypeError"),
-            Error::DivideByZero => f.write_str("DivideByZero"),
         }
     }
 }
@@ -36,8 +32,6 @@ impl std::error::Error for Error {
             Error::ScannerError(_, _) => "ScannerError",
             Error::UnexpectedTokenError(_, _) => "UnexpectedTokenError",
             Error::UnexpectedEofError => "UnexpectedEofError",
-            Error::TypeError => "TypeError",
-            Error::DivideByZero => "DivideByZero",
         }
     }
 }

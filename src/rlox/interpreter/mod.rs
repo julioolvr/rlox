@@ -1,8 +1,7 @@
 mod errors;
 
 use self::errors::RuntimeError;
-use rlox::errors::Error;
-use rlox::lox_value::LoxValue;
+use rlox::lox_value::{LoxValue, ValueError};
 use rlox::parser::expr::Expr;
 use rlox::token::TokenType;
 
@@ -56,7 +55,7 @@ impl Interpreter {
                         left_value
                             .divide(right_value)
                             .map_err(|err| match err {
-                                         Error::DivideByZero => {
+                                         ValueError::DivideByZero => {
                                              RuntimeError::DivideByZeroError(operator.clone())
                                          }
                                          _ => RuntimeError::DivideNonNumbers(operator.clone()),
