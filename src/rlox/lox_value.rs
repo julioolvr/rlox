@@ -78,17 +78,17 @@ impl LoxValue {
                 if let LoxValue::Number(right_number) = other {
                     Ok(LoxValue::Number(left_number + right_number))
                 } else {
-                    Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+                    Err(Error::TypeError)
                 }
             }
             LoxValue::String(ref left_string) => {
                 if let LoxValue::String(right_string) = other {
                     Ok(LoxValue::String(format!("{}{}", left_string, right_string)))
                 } else {
-                    Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+                    Err(Error::TypeError)
                 }
             }
-            _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
+            _ => Err(Error::TypeError),
         }
     }
 

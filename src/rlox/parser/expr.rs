@@ -67,7 +67,11 @@ impl Expr {
                             .multiply(right_value)
                             .map_err(|_| Error::MultiplyNonNumbers(operator.clone()))
                     }
-                    TokenType::Plus => left_value.plus(right_value),
+                    TokenType::Plus => {
+                        left_value
+                            .plus(right_value)
+                            .map_err(|_| Error::PlusTypeError(operator.clone()))
+                    }
                     TokenType::Greater => left_value.is_greater(right_value),
                     TokenType::GreaterEqual => left_value.is_greater_equal(right_value),
                     TokenType::Less => left_value.is_less(right_value),

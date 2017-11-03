@@ -12,6 +12,7 @@ pub enum Error {
     SubtractNonNumbers(Token),
     DivideNonNumbers(Token),
     MultiplyNonNumbers(Token),
+    PlusTypeError(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -52,6 +53,11 @@ impl std::fmt::Display for Error {
                        "[line {}] Both sides of a multiplication must be numbers",
                        token.line)
             }
+            Error::PlusTypeError(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of an addition must be either strings or numbers",
+                       token.line)
+            }
         }
     }
 }
@@ -68,6 +74,7 @@ impl std::error::Error for Error {
             Error::SubtractNonNumbers(_) => "SubtractNonNumbers",
             Error::DivideNonNumbers(_) => "DivideNonNumbers",
             Error::MultiplyNonNumbers(_) => "MultiplyNonNumbers",
+            Error::PlusTypeError(_) => "PlusTypeError",
         }
     }
 }
