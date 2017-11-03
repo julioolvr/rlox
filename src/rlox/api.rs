@@ -25,11 +25,13 @@ pub fn run_repl() {
 
     for input in user_input {
         if let Err(errors) = run(input) {
-            println!("");
+            println!();
 
             for err in errors {
                 println!("{}", err);
             }
+
+            println!();
         }
     }
 }
@@ -52,11 +54,12 @@ fn run(code: String) -> Result<(), Vec<Error>> {
             println!("{}", ast);
 
             match Interpreter::interpret(&ast) {
-                Ok(result) => println!("{}", result),
-                Err(err) => println!("{}", Error::Runtime(err)),
+                Ok(result) => {
+                    println!("{}", result);
+                    Ok(())
+                }
+                Err(err) => Err(vec![Error::Runtime(err)]),
             }
-
-            Ok(())
         }
         Err(err) => Err(vec![Error::Parser(err)]),
     }
