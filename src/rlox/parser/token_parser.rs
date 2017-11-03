@@ -1,4 +1,4 @@
-use rlox::token::{Token, TokenType};
+use rlox::token::{Token, TokenType, Literal};
 use rlox::parser::errors::ParsingError;
 use rlox::parser::{Expr, Stmt};
 
@@ -17,7 +17,7 @@ impl TokenParser {
         let mut errors: Vec<ParsingError> = Vec::new();
 
         while !self.is_over() {
-            match self.statement() {
+            match self.declaration() {
                 Ok(stmt) => statements.push(stmt),
                 Err(err) => errors.push(err),
             }
@@ -30,34 +30,61 @@ impl TokenParser {
         }
     }
 
+    fn declaration(&mut self) -> Result<Stmt, ParsingError> {
+        let statement = if self.next_is(vec![TokenType::Var]) {
+            self.var_declaration()
+        } else {
+            self.statement()
+        };
+
+        match statement {
+            Ok(stmt) => Ok(stmt),
+            Err(err) => {
+                self.synchronize();
+                Err(err)
+            }
+        }
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, ParsingError> {
+        let name = self.consume(TokenType::Identifier, "Expected variable name".to_string())?;
+
+        let initial_value = if self.next_is(vec![TokenType::Equal]) {
+            self.expression()?
+        } else {
+            Expr::Literal(Literal::Nil)
+        };
+
+        self.consume(TokenType::Semicolon,
+                     "Expect ';' after variable declaration.".to_string())?;
+        Ok(Stmt::Var(name, initial_value))
+    }
+
     fn statement(&mut self) -> Result<Stmt, ParsingError> {
         if self.next_is(vec![TokenType::Print]) {
-            return self.print_statement();
+            self.print_statement()
+        } else {
+            self.expression_statement()
         }
-
-        self.expression_statement()
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
 
-        if let Some(err) =
-            self.consume(TokenType::Semicolon,
-                         "Expect ';' after expression.".to_string()) {
-            Err(err)
-        } else {
-            Ok(Stmt::Expr(expr))
+        match self.consume(TokenType::Semicolon,
+                           "Expect ';' after expression.".to_string()) {
+            Ok(_) => Ok(Stmt::Expr(expr)),
+            Err(err) => Err(err),
         }
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
-        if let Some(err) =
-            self.consume(TokenType::Semicolon,
-                         "Expect ';' after expression.".to_string()) {
-            Err(err)
-        } else {
-            Ok(Stmt::Print(expr))
+
+        match self.consume(TokenType::Semicolon,
+                           "Expect ';' after expression.".to_string()) {
+            Ok(_) => Ok(Stmt::Print(expr)),
+            Err(err) => Err(err),
         }
     }
 
@@ -135,15 +162,17 @@ impl TokenParser {
             return Ok(Expr::Literal(self.previous().literal.clone()));
         }
 
+        if self.next_is(vec![TokenType::Identifier]) {
+            return Ok(Expr::Var(self.previous().clone()));
+        }
+
         if self.next_is(vec![TokenType::LeftParen]) {
             let expr = self.expression()?;
 
-            if let Some(err) =
-                self.consume(TokenType::RightParen,
-                             "Expected ')' after expression.".to_string()) {
-                return Err(err);
-            } else {
-                return Ok(Expr::Grouping(Box::new(expr)));
+            match self.consume(TokenType::RightParen,
+                               "Expected ')' after expression.".to_string()) {
+                Ok(_) => return Ok(Expr::Grouping(Box::new(expr))),
+                Err(err) => return Err(err),
             }
         }
 
@@ -196,12 +225,29 @@ impl TokenParser {
         self.tokens.get(self.current - 1).unwrap()
     }
 
-    fn consume(&mut self, token_type: TokenType, message: String) -> Option<ParsingError> {
+    fn consume(&mut self, token_type: TokenType, message: String) -> Result<Token, ParsingError> {
         if self.check(token_type) {
-            self.advance();
-            None
+            Ok(self.advance().clone())
         } else {
-            Some(ParsingError::UnexpectedTokenError(self.peek().clone(), message))
+            Err(ParsingError::UnexpectedTokenError(self.peek().clone(), message))
+        }
+    }
+
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.is_over() {
+            if self.previous().token_type == TokenType::Semicolon {
+                return;
+            }
+
+            match self.peek().token_type {
+                TokenType::Class | TokenType::Fun | TokenType::Var | TokenType::For |
+                TokenType::If | TokenType::While | TokenType::Print | TokenType::Return => return,
+                _ => {}
+            }
+
+            self.advance();
         }
     }
 }

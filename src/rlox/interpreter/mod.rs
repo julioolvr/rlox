@@ -35,6 +35,7 @@ impl Interpreter {
                     Err(err) => Some(err),
                 }
             }
+            Stmt::Var(_, _) => unimplemented!(),
         }
     }
 
@@ -143,6 +144,7 @@ impl Interpreter {
                     }
                 }
             }
+            Expr::Var(_) => unimplemented!()
         }
     }
 }
