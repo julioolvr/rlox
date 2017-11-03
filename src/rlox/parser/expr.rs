@@ -38,14 +38,8 @@ impl Expr {
                 let value = expr.value()?;
 
                 match token.token_type {
-                    TokenType::Minus => {
-                        if let LoxValue::Number(number) = value {
-                            Ok(LoxValue::Number(-number))
-                        } else {
-                            Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                        }
-                    }
-                    TokenType::Bang => Ok(LoxValue::Bool(!value.is_truthy())),
+                    TokenType::Minus => value.negate_number(),
+                    TokenType::Bang => value.negate(),
                     _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
                 }
             }
@@ -54,52 +48,10 @@ impl Expr {
                 let right_value = right.value()?;
 
                 match operator.token_type {
-                    TokenType::Minus => {
-                        if let LoxValue::Number(left_number) = left_value {
-                            if let LoxValue::Number(right_number) = right_value {
-                                return Ok(LoxValue::Number(left_number - right_number));
-                            }
-                        }
-
-                        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                    }
-                    TokenType::Slash => {
-                        if let LoxValue::Number(left_number) = left_value {
-                            if let LoxValue::Number(right_number) = right_value {
-                                return Ok(LoxValue::Number(left_number / right_number));
-                            }
-                        }
-
-                        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                    }
-                    TokenType::Star => {
-                        if let LoxValue::Number(left_number) = left_value {
-                            if let LoxValue::Number(right_number) = right_value {
-                                return Ok(LoxValue::Number(left_number * right_number));
-                            }
-                        }
-
-                        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                    }
-                    TokenType::Plus => {
-                        match left_value {
-                            LoxValue::Number(left_number) => {
-                                if let LoxValue::Number(right_number) = right_value {
-                                    Ok(LoxValue::Number(left_number + right_number))
-                                } else {
-                                    Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                                }
-                            }
-                            LoxValue::String(left_string) => {
-                                if let LoxValue::String(right_string) = right_value {
-                                    Ok(LoxValue::String(format!("{}{}", left_string, right_string)))
-                                } else {
-                                    Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
-                                }
-                            }
-                            _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
-                        }
-                    }
+                    TokenType::Minus => left_value.subtract(right_value),
+                    TokenType::Slash => left_value.divide(right_value),
+                    TokenType::Star => left_value.multiply(right_value),
+                    TokenType::Plus => left_value.plus(right_value),
                     _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
                 }
             }
