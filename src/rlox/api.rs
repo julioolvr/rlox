@@ -51,16 +51,9 @@ fn run(code: String) -> Result<(), Vec<Error>> {
 
     match ast {
         Ok(ast) => {
-            for stmt in ast.iter() {
-                println!("{}", stmt);
-            }
-
-            match Interpreter::interpret(ast.first().unwrap()) {
-                Ok(result) => {
-                    println!("{}", result);
-                    Ok(())
-                }
-                Err(err) => Err(vec![Error::Runtime(err)]),
+            match Interpreter::interpret_statement(ast.first().unwrap()) {
+                Some(err) => Err(vec![Error::Runtime(err)]),
+                None => Ok(()),
             }
         }
         Err(errors) => {

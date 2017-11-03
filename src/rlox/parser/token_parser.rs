@@ -1,6 +1,6 @@
 use rlox::token::{Token, TokenType};
 use rlox::parser::errors::ParsingError;
-use rlox::parser::Expr;
+use rlox::parser::{Expr, Stmt};
 
 pub struct TokenParser {
     tokens: Vec<Token>,
@@ -12,13 +12,13 @@ impl TokenParser {
         TokenParser { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Expr>, Vec<ParsingError>> {
-        let mut statements: Vec<Expr> = Vec::new();
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, Vec<ParsingError>> {
+        let mut statements: Vec<Stmt> = Vec::new();
         let mut errors: Vec<ParsingError> = Vec::new();
 
         while !self.is_over() {
             match self.statement() {
-                Ok(expr) => statements.push(expr),
+                Ok(stmt) => statements.push(stmt),
                 Err(err) => errors.push(err),
             }
         }
@@ -30,11 +30,15 @@ impl TokenParser {
         }
     }
 
-    fn statement(&mut self) -> Result<Expr, ParsingError> {
+    fn statement(&mut self) -> Result<Stmt, ParsingError> {
+        if self.next_is(vec![TokenType::Print]) {
+            return self.print_statement();
+        }
+
         self.expression_statement()
     }
 
-    fn expression_statement(&mut self) -> Result<Expr, ParsingError> {
+    fn expression_statement(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
 
         if let Some(err) =
@@ -42,7 +46,18 @@ impl TokenParser {
                          "Expect ';' after expression.".to_string()) {
             Err(err)
         } else {
-            Ok(expr)
+            Ok(Stmt::Expr(expr))
+        }
+    }
+
+    fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
+        let expr = self.expression()?;
+        if let Some(err) =
+            self.consume(TokenType::Semicolon,
+                         "Expect ';' after expression.".to_string()) {
+            Err(err)
+        } else {
+            Ok(Stmt::Print(expr))
         }
     }
 

@@ -2,13 +2,33 @@ pub mod errors;
 
 use self::errors::RuntimeError;
 use rlox::lox_value::{LoxValue, ValueError};
-use rlox::parser::expr::Expr;
+use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
 
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(expr: &Expr) -> Result<LoxValue, RuntimeError> {
+    pub fn interpret_statement(stmt: &Stmt) -> Option<RuntimeError> {
+        match *stmt {
+            Stmt::Print(ref expr) => {
+                match Interpreter::interpret(expr) {
+                    Ok(val) => {
+                        println!("{}", val);
+                        None
+                    }
+                    Err(err) => Some(err),
+                }
+            }
+            Stmt::Expr(ref expr) => {
+                match Interpreter::interpret(expr) {
+                    Ok(_) => None,
+                    Err(err) => Some(err),
+                }
+            }
+        }
+    }
+
+    fn interpret(expr: &Expr) -> Result<LoxValue, RuntimeError> {
         match *expr {
             Expr::Literal(ref literal) => {
                 if let Some(value) = literal.value() {
