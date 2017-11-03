@@ -3,7 +3,7 @@ mod errors;
 use std;
 pub use self::errors::ValueError;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LoxValue {
     Number(f64),
     String(String),

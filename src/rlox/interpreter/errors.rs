@@ -14,6 +14,7 @@ pub enum RuntimeError {
     LessNonNumbers(Token),
     LessEqualNonNumbers(Token),
     DivideByZeroError(Token),
+    UndefinedVariable(Token),
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -70,6 +71,12 @@ impl std::fmt::Display for RuntimeError {
             RuntimeError::DivideByZeroError(ref token) => {
                 write!(f, "[line {}] Cannot divide by zero", token.line)
             }
+            RuntimeError::UndefinedVariable(ref token) => {
+                write!(f,
+                       "[line {}] Undefined variable `{}`",
+                       token.line,
+                       token.lexeme)
+            }
         }
     }
 }
@@ -88,6 +95,7 @@ impl std::error::Error for RuntimeError {
             RuntimeError::LessNonNumbers(_) => "LessNonNumbers",
             RuntimeError::LessEqualNonNumbers(_) => "LessEqualNonNumbers",
             RuntimeError::DivideByZeroError(_) => "DivideByZeroError",
+            RuntimeError::UndefinedVariable(_) => "UndefinedVariable",
         }
     }
 }

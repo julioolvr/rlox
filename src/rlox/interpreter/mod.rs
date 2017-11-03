@@ -7,7 +7,7 @@ use rlox::token::TokenType;
 use rlox::environment::Environment;
 
 pub struct Interpreter {
-    env: Environment
+    env: Environment,
 }
 
 impl Interpreter {
@@ -42,7 +42,15 @@ impl Interpreter {
                     Err(err) => Some(err),
                 }
             }
-            Stmt::Var(_, _) => unimplemented!(),
+            Stmt::Var(ref token, ref expr) => {
+                let value = match self.interpret_expr(expr) {
+                    Ok(value) => value,
+                    Err(err) => return Some(err),
+                };
+
+                self.env.define(token.lexeme.clone(), value);
+                None
+            }
         }
     }
 
@@ -151,7 +159,12 @@ impl Interpreter {
                     }
                 }
             }
-            Expr::Var(_) => unimplemented!()
+            Expr::Var(ref token) => {
+                match self.env.get(&token.lexeme) {
+                    Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                }
+            }
         }
     }
 }
