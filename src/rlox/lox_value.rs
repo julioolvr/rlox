@@ -99,7 +99,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn is_greater_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
@@ -109,7 +109,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn is_less(&self, other: LoxValue) -> Result<LoxValue, Error> {
@@ -119,7 +119,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn is_less_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
@@ -129,7 +129,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, Error> {
