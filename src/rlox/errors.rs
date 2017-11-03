@@ -6,6 +6,7 @@ pub enum Error {
     ScannerError(usize, String),
     UnexpectedTokenError(Token, String),
     UnexpectedEofError,
+    Internal(String),
 }
 
 impl std::fmt::Display for Error {
@@ -22,6 +23,7 @@ impl std::fmt::Display for Error {
                        token.lexeme)
             }
             Error::UnexpectedEofError => f.write_str("Unexpected end of input"),
+            Error::Internal(message) => write!(f, "Internal interpreter error: {}", message),
         }
     }
 }
