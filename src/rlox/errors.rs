@@ -9,6 +9,7 @@ pub enum Error {
     InternalError(String),
     NegateNonNumberError(Token),
     TypeError,
+    SubtractNonNumbers(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -34,6 +35,11 @@ impl std::fmt::Display for Error {
                        token.line)
             }
             Error::TypeError => f.write_str("TypeError"),
+            Error::SubtractNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a subtraction must be numbers",
+                       token.line)
+            }
         }
     }
 }
@@ -47,6 +53,7 @@ impl std::error::Error for Error {
             Error::InternalError(_) => "InternalError",
             Error::NegateNonNumberError(_) => "NegateNonNumberError",
             Error::TypeError => "TypeError",
+            Error::SubtractNonNumbers(_) => "SubtractNonNumbers",
         }
     }
 }

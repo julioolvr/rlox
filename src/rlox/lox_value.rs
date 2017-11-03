@@ -49,7 +49,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::TypeError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn divide(&self, other: LoxValue) -> Result<LoxValue, Error> {

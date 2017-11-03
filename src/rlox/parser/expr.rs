@@ -52,7 +52,11 @@ impl Expr {
                 let right_value = right.value()?;
 
                 match operator.token_type {
-                    TokenType::Minus => left_value.subtract(right_value),
+                    TokenType::Minus => {
+                        left_value
+                            .subtract(right_value)
+                            .map_err(|_| Error::SubtractNonNumbers(operator.clone()))
+                    }
                     TokenType::Slash => left_value.divide(right_value),
                     TokenType::Star => left_value.multiply(right_value),
                     TokenType::Plus => left_value.plus(right_value),
