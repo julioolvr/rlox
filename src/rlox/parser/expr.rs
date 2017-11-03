@@ -60,7 +60,12 @@ impl Expr {
                     TokenType::Slash => {
                         left_value
                             .divide(right_value)
-                            .map_err(|_| Error::DivideNonNumbers(operator.clone()))
+                            .map_err(|err| match err {
+                                         Error::DivideByZero => {
+                                             Error::DivideByZeroError(operator.clone())
+                                         }
+                                         _ => Error::DivideNonNumbers(operator.clone()),
+                                     })
                     }
                     TokenType::Star => {
                         left_value

@@ -55,7 +55,11 @@ impl LoxValue {
     pub fn divide(&self, other: LoxValue) -> Result<LoxValue, Error> {
         if let LoxValue::Number(left_number) = *self {
             if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Number(left_number / right_number));
+                if right_number != 0.0 {
+                    return Ok(LoxValue::Number(left_number / right_number));
+                } else {
+                    return Err(Error::DivideByZero);
+                }
             }
         }
 

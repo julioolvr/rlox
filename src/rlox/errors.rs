@@ -17,6 +17,8 @@ pub enum Error {
     GreaterEqualNonNumbers(Token),
     LessNonNumbers(Token),
     LessEqualNonNumbers(Token),
+    DivideByZero,
+    DivideByZeroError(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -82,6 +84,10 @@ impl std::fmt::Display for Error {
                        "[line {}] Both sides of a less or equal comparison must be numbers",
                        token.line)
             }
+            Error::DivideByZero => f.write_str("DivideByZero"),
+            Error::DivideByZeroError(ref token) => {
+                write!(f, "[line {}] Cannot divide by zero", token.line)
+            }
         }
     }
 }
@@ -103,6 +109,8 @@ impl std::error::Error for Error {
             Error::GreaterEqualNonNumbers(_) => "GreaterEqualNonNumbers",
             Error::LessNonNumbers(_) => "LessNonNumbers",
             Error::LessEqualNonNumbers(_) => "LessEqualNonNumbers",
+            Error::DivideByZero => "DivideByZero",
+            Error::DivideByZeroError(_) => "DivideByZeroError",
         }
     }
 }
