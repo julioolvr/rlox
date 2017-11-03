@@ -72,10 +72,26 @@ impl Expr {
                             .plus(right_value)
                             .map_err(|_| Error::PlusTypeError(operator.clone()))
                     }
-                    TokenType::Greater => left_value.is_greater(right_value),
-                    TokenType::GreaterEqual => left_value.is_greater_equal(right_value),
-                    TokenType::Less => left_value.is_less(right_value),
-                    TokenType::LessEqual => left_value.is_less_equal(right_value),
+                    TokenType::Greater => {
+                        left_value
+                            .is_greater(right_value)
+                            .map_err(|_| Error::GreaterNonNumbers(operator.clone()))
+                    }
+                    TokenType::GreaterEqual => {
+                        left_value
+                            .is_greater_equal(right_value)
+                            .map_err(|_| Error::GreaterEqualNonNumbers(operator.clone()))
+                    }
+                    TokenType::Less => {
+                        left_value
+                            .is_less(right_value)
+                            .map_err(|_| Error::LessNonNumbers(operator.clone()))
+                    }
+                    TokenType::LessEqual => {
+                        left_value
+                            .is_less_equal(right_value)
+                            .map_err(|_| Error::LessEqualNonNumbers(operator.clone()))
+                    }
                     TokenType::BangEqual => left_value.is_not_equal(&right_value),
                     TokenType::EqualEqual => left_value.is_equal(&right_value),
                     _ => {

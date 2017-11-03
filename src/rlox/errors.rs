@@ -13,6 +13,10 @@ pub enum Error {
     DivideNonNumbers(Token),
     MultiplyNonNumbers(Token),
     PlusTypeError(Token),
+    GreaterNonNumbers(Token),
+    GreaterEqualNonNumbers(Token),
+    LessNonNumbers(Token),
+    LessEqualNonNumbers(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -58,6 +62,26 @@ impl std::fmt::Display for Error {
                        "[line {}] Both sides of an addition must be either strings or numbers",
                        token.line)
             }
+            Error::GreaterNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a greater than comparison must be numbers",
+                       token.line)
+            }
+            Error::GreaterEqualNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a greater or equal comparison must be numbers",
+                       token.line)
+            }
+            Error::LessNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a less than comparison must be numbers",
+                       token.line)
+            }
+            Error::LessEqualNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a less or equal comparison must be numbers",
+                       token.line)
+            }
         }
     }
 }
@@ -75,6 +99,10 @@ impl std::error::Error for Error {
             Error::DivideNonNumbers(_) => "DivideNonNumbers",
             Error::MultiplyNonNumbers(_) => "MultiplyNonNumbers",
             Error::PlusTypeError(_) => "PlusTypeError",
+            Error::GreaterNonNumbers(_) => "GreaterNonNumbers",
+            Error::GreaterEqualNonNumbers(_) => "GreaterEqualNonNumbers",
+            Error::LessNonNumbers(_) => "LessNonNumbers",
+            Error::LessEqualNonNumbers(_) => "LessEqualNonNumbers",
         }
     }
 }
