@@ -4,13 +4,20 @@ use self::errors::RuntimeError;
 use rlox::lox_value::{LoxValue, ValueError};
 use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
+use rlox::environment::Environment;
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    env: Environment
+}
 
 impl Interpreter {
-    pub fn interpret(stmts: Vec<Stmt>) -> Option<RuntimeError> {
+    pub fn new() -> Interpreter {
+        Interpreter { env: Environment::new() }
+    }
+
+    pub fn interpret(&mut self, stmts: Vec<Stmt>) -> Option<RuntimeError> {
         for stmt in stmts.iter() {
-            if let Some(err) = Interpreter::interpret_stmt(stmt) {
+            if let Some(err) = self.interpret_stmt(stmt) {
                 return Some(err);
             }
         }
@@ -18,10 +25,10 @@ impl Interpreter {
         None
     }
 
-    fn interpret_stmt(stmt: &Stmt) -> Option<RuntimeError> {
+    fn interpret_stmt(&mut self, stmt: &Stmt) -> Option<RuntimeError> {
         match *stmt {
             Stmt::Print(ref expr) => {
-                match Interpreter::interpret_expr(expr) {
+                match self.interpret_expr(expr) {
                     Ok(val) => {
                         println!("{}", val);
                         None
@@ -30,7 +37,7 @@ impl Interpreter {
                 }
             }
             Stmt::Expr(ref expr) => {
-                match Interpreter::interpret_expr(expr) {
+                match self.interpret_expr(expr) {
                     Ok(_) => None,
                     Err(err) => Some(err),
                 }
@@ -39,7 +46,7 @@ impl Interpreter {
         }
     }
 
-    fn interpret_expr(expr: &Expr) -> Result<LoxValue, RuntimeError> {
+    fn interpret_expr(&self, expr: &Expr) -> Result<LoxValue, RuntimeError> {
         match *expr {
             Expr::Literal(ref literal) => {
                 if let Some(value) = literal.value() {
@@ -48,9 +55,9 @@ impl Interpreter {
                     Err(RuntimeError::InternalError("Invalid literal - no value".to_string()))
                 }
             }
-            Expr::Grouping(ref expr) => Interpreter::interpret_expr(expr),
+            Expr::Grouping(ref expr) => self.interpret_expr(expr),
             Expr::Unary(ref token, ref expr) => {
-                let value = Interpreter::interpret_expr(expr)?;
+                let value = self.interpret_expr(expr)?;
 
                 match token.token_type {
                     TokenType::Minus => {
@@ -73,8 +80,8 @@ impl Interpreter {
                 }
             }
             Expr::Binary(ref left, ref operator, ref right) => {
-                let left_value = Interpreter::interpret_expr(left)?;
-                let right_value = Interpreter::interpret_expr(right)?;
+                let left_value = self.interpret_expr(left)?;
+                let right_value = self.interpret_expr(right)?;
 
                 match operator.token_type {
                     TokenType::Minus => {

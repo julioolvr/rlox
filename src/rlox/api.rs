@@ -14,7 +14,8 @@ pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    run(contents)
+    let mut interpreter = Interpreter::new();
+    run(&mut interpreter, contents)
 }
 
 pub fn run_repl() {
@@ -22,9 +23,10 @@ pub fn run_repl() {
     println!("^C to exit\n");
 
     let user_input = ReplIterator {};
+    let mut interpreter = Interpreter::new();
 
     for input in user_input {
-        if let Err(errors) = run(input) {
+        if let Err(errors) = run(&mut interpreter, input) {
             println!();
 
             for err in errors {
@@ -36,7 +38,7 @@ pub fn run_repl() {
     }
 }
 
-fn run(code: String) -> Result<(), Vec<Error>> {
+fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
     let (tokens, scanner_errors) = scanner.scan_tokens();
     let parser = Parser::new(tokens);
@@ -51,7 +53,7 @@ fn run(code: String) -> Result<(), Vec<Error>> {
 
     match ast {
         Ok(ast) => {
-            match Interpreter::interpret(ast) {
+            match interpreter.interpret(ast) {
                 Some(err) => Err(vec![Error::Runtime(err)]),
                 None => Ok(()),
             }
