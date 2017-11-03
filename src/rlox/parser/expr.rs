@@ -57,7 +57,11 @@ impl Expr {
                             .subtract(right_value)
                             .map_err(|_| Error::SubtractNonNumbers(operator.clone()))
                     }
-                    TokenType::Slash => left_value.divide(right_value),
+                    TokenType::Slash => {
+                        left_value
+                            .divide(right_value)
+                            .map_err(|_| Error::DivideNonNumbers(operator.clone()))
+                    }
                     TokenType::Star => left_value.multiply(right_value),
                     TokenType::Plus => left_value.plus(right_value),
                     TokenType::Greater => left_value.is_greater(right_value),

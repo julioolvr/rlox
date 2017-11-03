@@ -59,7 +59,7 @@ impl LoxValue {
             }
         }
 
-        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+        Err(Error::TypeError)
     }
 
     pub fn multiply(&self, other: LoxValue) -> Result<LoxValue, Error> {

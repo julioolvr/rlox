@@ -10,6 +10,7 @@ pub enum Error {
     NegateNonNumberError(Token),
     TypeError,
     SubtractNonNumbers(Token),
+    DivideNonNumbers(Token),
 }
 
 impl std::fmt::Display for Error {
@@ -40,6 +41,11 @@ impl std::fmt::Display for Error {
                        "[line {}] Both sides of a subtraction must be numbers",
                        token.line)
             }
+            Error::DivideNonNumbers(ref token) => {
+                write!(f,
+                       "[line {}] Both sides of a division must be numbers",
+                       token.line)
+            }
         }
     }
 }
@@ -54,6 +60,7 @@ impl std::error::Error for Error {
             Error::NegateNonNumberError(_) => "NegateNonNumberError",
             Error::TypeError => "TypeError",
             Error::SubtractNonNumbers(_) => "SubtractNonNumbers",
+            Error::DivideNonNumbers(_) => "DivideNonNumbers",
         }
     }
 }
