@@ -6,6 +6,7 @@ use std::fs::File;
 use rlox::scanner::Scanner;
 use rlox::parser::Parser;
 use rlox::errors::Error;
+use rlox::interpreter::Interpreter;
 
 pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
     let mut f = File::open(path).expect("file not found");
@@ -47,7 +48,7 @@ fn run(code: String) -> Result<(), Vec<Error>> {
         Ok(ast) => {
             println!("{}", ast);
 
-            match ast.value() {
+            match Interpreter::interpret(&ast) {
                 Ok(result) => println!("{}", result),
                 Err(err) => println!("{}", err),
             }

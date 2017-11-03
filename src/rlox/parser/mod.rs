@@ -1,5 +1,5 @@
 mod token_parser;
-mod expr;
+pub mod expr;
 
 use rlox::token::Token;
 use rlox::errors::Error;
