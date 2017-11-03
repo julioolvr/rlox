@@ -8,7 +8,17 @@ use rlox::token::TokenType;
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(stmt: &Stmt) -> Option<RuntimeError> {
+    pub fn interpret(stmts: Vec<Stmt>) -> Option<RuntimeError> {
+        for stmt in stmts.iter() {
+            if let Some(err) = Interpreter::interpret_stmt(stmt) {
+                return Some(err);
+            }
+        }
+
+        None
+    }
+
+    fn interpret_stmt(stmt: &Stmt) -> Option<RuntimeError> {
         match *stmt {
             Stmt::Print(ref expr) => {
                 match Interpreter::interpret_expr(expr) {
