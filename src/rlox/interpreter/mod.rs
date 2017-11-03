@@ -1,18 +1,21 @@
-use rlox::lox_value::LoxValue;
+mod errors;
+
+use self::errors::RuntimeError;
 use rlox::errors::Error;
+use rlox::lox_value::LoxValue;
 use rlox::parser::expr::Expr;
 use rlox::token::TokenType;
 
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(expr: &Expr) -> Result<LoxValue, Error> {
+    pub fn interpret(expr: &Expr) -> Result<LoxValue, RuntimeError> {
         match *expr {
             Expr::Literal(ref literal) => {
                 if let Some(value) = literal.value() {
                     Ok(value)
                 } else {
-                    Err(Error::InternalError("Invalid literal - no value".to_string()))
+                    Err(RuntimeError::InternalError("Invalid literal - no value".to_string()))
                 }
             }
             Expr::Grouping(ref expr) => Interpreter::interpret(expr),
@@ -23,10 +26,20 @@ impl Interpreter {
                     TokenType::Minus => {
                         value
                             .negate_number()
-                            .map_err(|_| Error::NegateNonNumberError(token.clone()))
+                            .map_err(|_| RuntimeError::NegateNonNumberError(token.clone()))
                     }
-                    TokenType::Bang => value.negate(),
-                    _ => Err(Error::InternalError(format!("Invalid unary operator: {:?}", token))),
+                    TokenType::Bang => {
+                        value
+                            .negate()
+                            .map_err(|_| {
+                                         RuntimeError::InternalError("Can't negate value"
+                                                                         .to_string())
+                                     })
+                    }
+                    _ => {
+                        Err(RuntimeError::InternalError(format!("Invalid unary operator: {:?}",
+                                                                token)))
+                    }
                 }
             }
             Expr::Binary(ref left, ref operator, ref right) => {
@@ -37,53 +50,67 @@ impl Interpreter {
                     TokenType::Minus => {
                         left_value
                             .subtract(right_value)
-                            .map_err(|_| Error::SubtractNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::SubtractNonNumbers(operator.clone()))
                     }
                     TokenType::Slash => {
                         left_value
                             .divide(right_value)
                             .map_err(|err| match err {
                                          Error::DivideByZero => {
-                                             Error::DivideByZeroError(operator.clone())
+                                             RuntimeError::DivideByZeroError(operator.clone())
                                          }
-                                         _ => Error::DivideNonNumbers(operator.clone()),
+                                         _ => RuntimeError::DivideNonNumbers(operator.clone()),
                                      })
                     }
                     TokenType::Star => {
                         left_value
                             .multiply(right_value)
-                            .map_err(|_| Error::MultiplyNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::MultiplyNonNumbers(operator.clone()))
                     }
                     TokenType::Plus => {
                         left_value
                             .plus(right_value)
-                            .map_err(|_| Error::PlusTypeError(operator.clone()))
+                            .map_err(|_| RuntimeError::PlusTypeError(operator.clone()))
                     }
                     TokenType::Greater => {
                         left_value
                             .is_greater(right_value)
-                            .map_err(|_| Error::GreaterNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::GreaterNonNumbers(operator.clone()))
                     }
                     TokenType::GreaterEqual => {
                         left_value
                             .is_greater_equal(right_value)
-                            .map_err(|_| Error::GreaterEqualNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::GreaterEqualNonNumbers(operator.clone()))
                     }
                     TokenType::Less => {
                         left_value
                             .is_less(right_value)
-                            .map_err(|_| Error::LessNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::LessNonNumbers(operator.clone()))
                     }
                     TokenType::LessEqual => {
                         left_value
                             .is_less_equal(right_value)
-                            .map_err(|_| Error::LessEqualNonNumbers(operator.clone()))
+                            .map_err(|_| RuntimeError::LessEqualNonNumbers(operator.clone()))
                     }
-                    TokenType::BangEqual => left_value.is_not_equal(&right_value),
-                    TokenType::EqualEqual => left_value.is_equal(&right_value),
+                    TokenType::BangEqual => {
+                        left_value
+                            .is_not_equal(&right_value)
+                            .map_err(|_| {
+                                         RuntimeError::InternalError("Can't check non-equality"
+                                                                         .to_string())
+                                     })
+                    }
+                    TokenType::EqualEqual => {
+                        left_value
+                            .is_equal(&right_value)
+                            .map_err(|_| {
+                                         RuntimeError::InternalError("Can't check equality"
+                                                                         .to_string())
+                                     })
+                    }
                     _ => {
-                        Err(Error::InternalError(format!("Invalid binary operator: {:?}",
-                                                         operator)))
+                        Err(RuntimeError::InternalError(format!("Invalid binary operator: {:?}",
+                                                                operator)))
                     }
                 }
             }
