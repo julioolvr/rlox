@@ -46,7 +46,7 @@ fn run(code: String) -> Result<(), Vec<Error>> {
     match ast {
         Ok(ast) => {
             println!("{}", ast);
-            println!("{:?}", ast.value());
+            println!("{}", ast.value().unwrap());
             Ok(())
         }
         Err(err) => Err(vec![err]),

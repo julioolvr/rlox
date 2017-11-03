@@ -1,3 +1,4 @@
+use std;
 use rlox::errors::Error;
 
 #[derive(Debug, PartialEq)]
@@ -6,6 +7,17 @@ pub enum LoxValue {
     String(String),
     Bool(bool),
     Nil,
+}
+
+impl std::fmt::Display for LoxValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            LoxValue::Number(number) => write!(f, "{}", number),
+            LoxValue::String(ref string) => write!(f, "{}", string),
+            LoxValue::Bool(b) => write!(f, "{}", b),
+            LoxValue::Nil => f.write_str("nil"),
+        }
+    }
 }
 
 impl LoxValue {
