@@ -1,6 +1,6 @@
 use rlox::errors::Error;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LoxValue {
     Number(f64),
     String(String),
@@ -78,5 +78,53 @@ impl LoxValue {
             }
             _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
         }
+    }
+
+    pub fn is_greater(&self, other: LoxValue) -> Result<LoxValue, Error> {
+        if let LoxValue::Number(left_number) = *self {
+            if let LoxValue::Number(right_number) = other {
+                return Ok(LoxValue::Bool(left_number > right_number));
+            }
+        }
+
+        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+    }
+
+    pub fn is_greater_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
+        if let LoxValue::Number(left_number) = *self {
+            if let LoxValue::Number(right_number) = other {
+                return Ok(LoxValue::Bool(left_number >= right_number));
+            }
+        }
+
+        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+    }
+
+    pub fn is_less(&self, other: LoxValue) -> Result<LoxValue, Error> {
+        if let LoxValue::Number(left_number) = *self {
+            if let LoxValue::Number(right_number) = other {
+                return Ok(LoxValue::Bool(left_number < right_number));
+            }
+        }
+
+        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+    }
+
+    pub fn is_less_equal(&self, other: LoxValue) -> Result<LoxValue, Error> {
+        if let LoxValue::Number(left_number) = *self {
+            if let LoxValue::Number(right_number) = other {
+                return Ok(LoxValue::Bool(left_number <= right_number));
+            }
+        }
+
+        Err(Error::UnexpectedEofError) // TODO: Change for some InterpreterError
+    }
+
+    pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, Error> {
+        Ok(LoxValue::Bool(self != other))
+    }
+
+    pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, Error> {
+        Ok(LoxValue::Bool(self == other))
     }
 }

@@ -52,6 +52,12 @@ impl Expr {
                     TokenType::Slash => left_value.divide(right_value),
                     TokenType::Star => left_value.multiply(right_value),
                     TokenType::Plus => left_value.plus(right_value),
+                    TokenType::Greater => left_value.is_greater(right_value),
+                    TokenType::GreaterEqual => left_value.is_greater_equal(right_value),
+                    TokenType::Less => left_value.is_less(right_value),
+                    TokenType::LessEqual => left_value.is_less_equal(right_value),
+                    TokenType::BangEqual => left_value.is_not_equal(&right_value),
+                    TokenType::EqualEqual => left_value.is_equal(&right_value),
                     _ => Err(Error::UnexpectedEofError), // TODO: Change for some InterpreterError
                 }
             }
