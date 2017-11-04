@@ -93,6 +93,27 @@ impl Interpreter {
                     None
                 }
             }
+            Stmt::While(ref condition, ref body) => {
+                let mut keep_looping = match self.interpret_expr(condition) {
+                    Ok(result) => result.is_truthy(),
+                    Err(err) => return Some(err),
+                };
+
+                while keep_looping {
+                    let result = self.interpret_stmt(body);
+
+                    if result.is_some() {
+                        return result;
+                    }
+
+                    keep_looping = match self.interpret_expr(condition) {
+                        Ok(result) => result.is_truthy(),
+                        Err(err) => return Some(err),
+                    }
+                }
+
+                None
+            }
         }
     }
 

@@ -67,6 +67,8 @@ impl TokenParser {
             self.block_statement()
         } else if self.next_is(vec![TokenType::If]) {
             self.if_statement()
+        } else if self.next_is(vec![TokenType::While]) {
+            self.while_statement()
         } else {
             self.expression_statement()
         }
@@ -109,6 +111,18 @@ impl TokenParser {
         };
 
         Ok(Stmt::If(condition, Box::new(then_branch), Box::new(else_branch)))
+    }
+
+    fn while_statement(&mut self) -> Result<Stmt, ParsingError> {
+        self.consume(TokenType::LeftParen,
+                     "Expected `(` after `while`".to_string())?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen,
+                     "Expected `while` after condition".to_string())?;
+
+        let body = self.statement()?;
+
+        Ok(Stmt::While(condition, Box::new(body)))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
