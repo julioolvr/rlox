@@ -6,11 +6,22 @@ use rlox::lox_value::LoxValue;
 
 pub struct Environment {
     values: HashMap<String, LoxValue>,
+    enclosing: Box<Option<Environment>>,
 }
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment { values: HashMap::new() }
+        Environment {
+            values: HashMap::new(),
+            enclosing: Box::new(None),
+        }
+    }
+
+    pub fn from_parent(parent: Environment) -> Environment {
+        Environment {
+            values: HashMap::new(),
+            enclosing: Box::new(Some(parent)),
+        }
     }
 
     pub fn define(&mut self, key: String, val: LoxValue) {
@@ -22,14 +33,27 @@ impl Environment {
             self.values.insert(key.clone(), val);
             Ok(())
         } else {
-            Err(EnvironmentError::UndefinedVariable(key.clone()))
+            match *self.enclosing {
+                Some(ref mut parent) => parent.assign(key, val),
+                None => Err(EnvironmentError::UndefinedVariable(key.clone())),
+            }
         }
     }
 
     pub fn get(&self, key: &String) -> Result<&LoxValue, EnvironmentError> {
         match self.values.get(key) {
             Some(value) => Ok(value),
-            None => Err(EnvironmentError::UndefinedVariable(key.clone()))
+            None => {
+                match *self.enclosing {
+                    Some(ref parent) => parent.get(key),
+                    None => Err(EnvironmentError::UndefinedVariable(key.clone())),
+                }
+            }
         }
+    }
+
+    /// Drop this environment and return its parent
+    pub fn pop(self) -> Option<Environment> {
+        *self.enclosing
     }
 }

@@ -7,12 +7,12 @@ use rlox::token::TokenType;
 use rlox::environment::Environment;
 
 pub struct Interpreter {
-    env: Environment,
+    env: Option<Environment>,
 }
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        Interpreter { env: Environment::new() }
+        Interpreter { env: Some(Environment::new()) }
     }
 
     pub fn interpret(&mut self, stmts: Vec<Stmt>) -> Option<RuntimeError> {
@@ -48,7 +48,35 @@ impl Interpreter {
                     Err(err) => return Some(err),
                 };
 
-                self.env.define(token.lexeme.clone(), value);
+                match self.env.as_mut() {
+                    Some(env) => env.define(token.lexeme.clone(), value),
+                    None => return Some(RuntimeError::InternalError("Missing environment when setting variable".to_string())),
+                }
+
+                None
+            }
+            Stmt::Block(ref statements) => {
+                let parent_env = self.env.take();
+
+                if parent_env.is_none() {
+                    return Some(RuntimeError::InternalError("Missing environment when creating block".to_string()));
+                }
+
+                let parent_env = parent_env.unwrap();
+                let new_env = Environment::from_parent(parent_env);
+                self.env = Some(new_env);
+
+                for stmt in statements {
+                    if let Some(err) = self.interpret_stmt(stmt) {
+                        return Some(err);
+                    }
+                }
+
+                if self.env.is_none() {
+                    return Some(RuntimeError::InternalError("Missing environment after leaving block".to_string()));
+                }
+
+                self.env = self.env.take().unwrap().pop();
                 None
             }
         }
@@ -160,7 +188,11 @@ impl Interpreter {
                 }
             }
             Expr::Var(ref token) => {
-                match self.env.get(&token.lexeme) {
+                if self.env.is_none() {
+                    return Err(RuntimeError::InternalError("Missing environment when retrieving variable".to_string()));
+                }
+
+                match self.env.as_mut().unwrap().get(&token.lexeme) {
                     Ok(value) => Ok(value.clone()),
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 }
@@ -168,7 +200,14 @@ impl Interpreter {
             Expr::Assign(ref token, ref expr) => {
                 let value = self.interpret_expr(expr)?;
 
-                match self.env.assign(&token.lexeme, value.clone()) {
+                if self.env.is_none() {
+                    return Err(RuntimeError::InternalError("Missing environment when assigning variable".to_string()));
+                }
+
+                match self.env
+                          .as_mut()
+                          .unwrap()
+                          .assign(&token.lexeme, value.clone()) {
                     Ok(_) => Ok(value),
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 }

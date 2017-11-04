@@ -63,6 +63,8 @@ impl TokenParser {
     fn statement(&mut self) -> Result<Stmt, ParsingError> {
         if self.next_is(vec![TokenType::Print]) {
             self.print_statement()
+        } else if self.next_is(vec![TokenType::LeftBrace]) {
+            self.block_statement()
         } else {
             self.expression_statement()
         }
@@ -76,6 +78,19 @@ impl TokenParser {
             Ok(_) => Ok(Stmt::Expr(expr)),
             Err(err) => Err(err),
         }
+    }
+
+    fn block_statement(&mut self) -> Result<Stmt, ParsingError> {
+        let mut statements: Vec<Stmt> = Vec::new();
+
+        while !self.check(TokenType::RightBrace) && !self.is_over() {
+            statements.push(self.declaration()?);
+        }
+
+        self.consume(TokenType::RightBrace,
+                     "Expected `}` after block".to_string())?;
+
+        Ok(Stmt::Block(statements))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
