@@ -79,6 +79,20 @@ impl Interpreter {
                 self.env = self.env.take().unwrap().pop();
                 None
             }
+            Stmt::If(ref condition, ref then_branch, ref else_branch) => {
+                let condition_result = match self.interpret_expr(condition) {
+                    Ok(value) => value,
+                    Err(err) => return Some(err),
+                };
+
+                if condition_result.is_truthy() {
+                    self.interpret_stmt(then_branch)
+                } else if let Some(ref asd) = **else_branch {
+                    self.interpret_stmt(asd)
+                } else {
+                    None
+                }
+            }
         }
     }
 

@@ -65,6 +65,8 @@ impl TokenParser {
             self.print_statement()
         } else if self.next_is(vec![TokenType::LeftBrace]) {
             self.block_statement()
+        } else if self.next_is(vec![TokenType::If]) {
+            self.if_statement()
         } else {
             self.expression_statement()
         }
@@ -91,6 +93,22 @@ impl TokenParser {
                      "Expected `}` after block".to_string())?;
 
         Ok(Stmt::Block(statements))
+    }
+
+    fn if_statement(&mut self) -> Result<Stmt, ParsingError> {
+        self.consume(TokenType::LeftParen, "Expected `(` after `if`".to_string())?;
+        let condition = self.expression()?;
+        self.consume(TokenType::RightParen,
+                     "Expected `)` after condition".to_string())?;
+
+        let then_branch = self.statement()?;
+        let else_branch = if self.next_is(vec![TokenType::Else]) {
+            Some(self.statement()?)
+        } else {
+            None
+        };
+
+        Ok(Stmt::If(condition, Box::new(then_branch), Box::new(else_branch)))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
