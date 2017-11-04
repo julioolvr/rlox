@@ -123,8 +123,11 @@ mod tests {
 
                 assert_eq!(token.token_type, TokenType::String);
 
-                match token.literal {
-                    Literal::String(ref value) => assert_eq!(value, "some string"),
+                match token
+                          .literal
+                          .as_ref()
+                          .expect("Missing literal in token") {
+                    &Literal::String(ref value) => assert_eq!(value, "some string"),
                     _ => assert!(false, "Should be a Literal::String"),
                 }
             }
@@ -139,8 +142,11 @@ mod tests {
 
                 assert_eq!(token.token_type, TokenType::Number);
 
-                match token.literal {
-                    Literal::Number(value) => assert_eq!(value, 123.45),
+                match token
+                          .literal
+                          .as_ref()
+                          .expect("Missing literal in token") {
+                    &Literal::Number(value) => assert_eq!(value, 123.45),
                     _ => assert!(false, "Should be a Literal::Number"),
                 }
             }

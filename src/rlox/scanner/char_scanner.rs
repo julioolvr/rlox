@@ -34,7 +34,7 @@ impl CharScanner {
             }
         }
 
-        tokens.push(Token::new(TokenType::Eof, "".to_string(), Literal::None, self.line));
+        tokens.push(Token::new(TokenType::Eof, "".to_string(), None, self.line));
         (tokens, errors)
     }
 
@@ -160,10 +160,14 @@ impl CharScanner {
     }
 
     fn build_non_literal_token(&self, token_type: TokenType) -> Option<Token> {
-        self.build_literal_token(token_type, Literal::None)
+        self.build_token(token_type, None)
     }
 
     fn build_literal_token(&self, token_type: TokenType, literal: Literal) -> Option<Token> {
+        self.build_token(token_type, Some(literal))
+    }
+
+    fn build_token(&self, token_type: TokenType, literal: Option<Literal>) -> Option<Token> {
         Some(Token::new(token_type, self.current_lexeme(), literal, self.line))
     }
 
@@ -220,12 +224,12 @@ impl CharScanner {
             .map_or(TokenType::Identifier, |&token_type| token_type);
 
         let literal = match token_type {
-            TokenType::False => Literal::Bool(false),
-            TokenType::True => Literal::Bool(true),
-            TokenType::Nil => Literal::Nil,
-            _ => Literal::None,
+            TokenType::False => Some(Literal::Bool(false)),
+            TokenType::True => Some(Literal::Bool(true)),
+            TokenType::Nil => Some(Literal::Nil),
+            _ => None,
         };
 
-        Ok(self.build_literal_token(token_type, literal))
+        Ok(self.build_token(token_type, literal))
     }
 }

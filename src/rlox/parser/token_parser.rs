@@ -295,7 +295,13 @@ impl TokenParser {
                              TokenType::False,
                              TokenType::True,
                              TokenType::Nil]) {
-            return Ok(Expr::Literal(self.previous().literal.clone()));
+
+            return match self.previous().literal {
+                       Some(ref literal) => Ok(Expr::Literal(literal.clone())),
+                       None => {
+                           Err(ParsingError::InternalError("Missing literal value".to_string()))
+                       }
+                   };
         }
 
         if self.next_is(vec![TokenType::Identifier]) {

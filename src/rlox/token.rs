@@ -8,7 +8,6 @@ pub enum Literal {
     String(String),
     Bool(bool),
     Nil,
-    None,
 }
 
 impl std::fmt::Display for Literal {
@@ -18,7 +17,6 @@ impl std::fmt::Display for Literal {
             Literal::String(ref string) => write!(f, "{}", string),
             Literal::Bool(ref b) => write!(f, "{}", b),
             Literal::Nil => write!(f, "nil"),
-            Literal::None => f.write_str("NoneLiteral"),
         }
     }
 }
@@ -30,7 +28,6 @@ impl Literal {
             Literal::String(ref string) => Some(LoxValue::String(string.clone())),
             Literal::Bool(b) => Some(LoxValue::Bool(b)),
             Literal::Nil => Some(LoxValue::Nil),
-            Literal::None => None,
         }
     }
 }
@@ -38,13 +35,17 @@ impl Literal {
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
-    pub literal: Literal,
+    pub literal: Option<Literal>,
     pub lexeme: String,
     pub line: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: Literal, line: usize) -> Token {
+    pub fn new(token_type: TokenType,
+               lexeme: String,
+               literal: Option<Literal>,
+               line: usize)
+               -> Token {
         Token {
             token_type,
             lexeme,

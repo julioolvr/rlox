@@ -6,6 +6,7 @@ pub enum ParsingError {
     UnexpectedTokenError(Token, String),
     UnexpectedEofError,
     InvalidAssignmentError(Token),
+    InternalError(String)
 }
 
 impl std::fmt::Display for ParsingError {
@@ -22,6 +23,7 @@ impl std::fmt::Display for ParsingError {
             ParsingError::InvalidAssignmentError(ref token) => {
                 write!(f, "[line {}] Invalid assignment target", token.line)
             }
+            ParsingError::InternalError(ref message) => write!(f, "Internal error: {}", message)
         }
     }
 }
@@ -31,7 +33,8 @@ impl std::error::Error for ParsingError {
         match *self {
             ParsingError::UnexpectedTokenError(_, _) => "UnexpectedTokenError",
             ParsingError::UnexpectedEofError => "UnexpectedEofError",
-            ParsingError::InvalidAssignmentError(_) => "InvalidAssignmentError"
+            ParsingError::InvalidAssignmentError(_) => "InvalidAssignmentError",
+            ParsingError::InternalError(_) => "InternalError"
         }
     }
 }
