@@ -69,6 +69,8 @@ impl TokenParser {
             self.if_statement()
         } else if self.next_is(vec![TokenType::While]) {
             self.while_statement()
+        } else if self.next_is(vec![TokenType::For]) {
+            self.for_statement()
         } else {
             self.expression_statement()
         }
@@ -123,6 +125,51 @@ impl TokenParser {
         let body = self.statement()?;
 
         Ok(Stmt::While(condition, Box::new(body)))
+    }
+
+    fn for_statement(&mut self) -> Result<Stmt, ParsingError> {
+        self.consume(TokenType::LeftParen, "Expected `(` after `for`".to_string())?;
+
+        let initializer = if self.next_is(vec![TokenType::Semicolon]) {
+            None
+        } else if self.next_is(vec![TokenType::Var]) {
+            Some(self.var_declaration()?)
+        } else {
+            Some(self.expression_statement()?)
+        };
+
+        let condition = if self.next_is(vec![TokenType::Semicolon]) {
+            None
+        } else {
+            let expr = Some(self.expression()?);
+            self.consume(TokenType::Semicolon,
+                         "Expect `;` after loop condition.".to_string())?;
+            expr
+        };
+
+        let increment = if self.next_is(vec![TokenType::RightParen]) {
+            None
+        } else {
+            let expr = Some(self.expression()?);
+            self.consume(TokenType::RightParen,
+                         "Expect `)` after for clause.".to_string())?;
+            expr
+        };
+
+        let mut body = self.statement()?;
+
+        if let Some(increment_expr) = increment {
+            body = Stmt::Block(vec![body, Stmt::Expr(increment_expr)])
+        }
+
+        let condition = condition.unwrap_or(Expr::Literal(Literal::Bool(true)));
+        body = Stmt::While(condition, Box::new(body));
+
+        if let Some(initializer_expr) = initializer {
+            body = Stmt::Block(vec![initializer_expr, body])
+        }
+
+        Ok(body)
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
