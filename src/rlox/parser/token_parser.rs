@@ -126,7 +126,7 @@ impl TokenParser {
     }
 
     fn assignment(&mut self) -> Result<Expr, ParsingError> {
-        let expr = self.equality()?;
+        let expr = self.or()?;
 
         if self.next_is(vec![TokenType::Equal]) {
             let token = self.previous().clone();
@@ -138,6 +138,30 @@ impl TokenParser {
                 }
                 _ => return Err(ParsingError::InvalidAssignmentError(token)),
             }
+        }
+
+        Ok(expr)
+    }
+
+    fn or(&mut self) -> Result<Expr, ParsingError> {
+        let mut expr = self.and()?;
+
+        while self.next_is(vec![TokenType::Or]) {
+            let operator = self.previous().clone();
+            let right = self.and()?;
+            expr = Expr::Logical(Box::new(expr), operator, Box::new(right));
+        }
+
+        Ok(expr)
+    }
+
+    fn and(&mut self) -> Result<Expr, ParsingError> {
+        let mut expr = self.equality()?;
+
+        while self.next_is(vec![TokenType::And]) {
+            let operator = self.previous().clone();
+            let right = self.equality()?;
+            expr = Expr::Logical(Box::new(expr), operator, Box::new(right));
         }
 
         Ok(expr)

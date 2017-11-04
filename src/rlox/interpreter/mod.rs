@@ -226,6 +226,21 @@ impl Interpreter {
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 }
             }
+            Expr::Logical(ref left, ref operator, ref right) => {
+                let left_value = self.interpret_expr(left)?;
+
+                if operator.token_type == TokenType::Or {
+                    if left_value.is_truthy() {
+                        return Ok(left_value);
+                    }
+                } else {
+                    if !left_value.is_truthy() {
+                        return Ok(left_value);
+                    }
+                }
+
+                self.interpret_expr(right)
+            }
         }
     }
 }
