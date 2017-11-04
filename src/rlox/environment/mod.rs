@@ -17,6 +17,15 @@ impl Environment {
         self.values.insert(key, val);
     }
 
+    pub fn assign(&mut self, key: &String, val: LoxValue) -> Result<(), EnvironmentError> {
+        if self.values.contains_key(key) {
+            self.values.insert(key.clone(), val);
+            Ok(())
+        } else {
+            Err(EnvironmentError::UndefinedVariable(key.clone()))
+        }
+    }
+
     pub fn get(&self, key: &String) -> Result<&LoxValue, EnvironmentError> {
         match self.values.get(key) {
             Some(value) => Ok(value),

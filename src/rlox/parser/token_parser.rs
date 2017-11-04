@@ -89,7 +89,25 @@ impl TokenParser {
     }
 
     fn expression(&mut self) -> Result<Expr, ParsingError> {
-        self.equality()
+        self.assignment()
+    }
+
+    fn assignment(&mut self) -> Result<Expr, ParsingError> {
+        let expr = self.equality()?;
+
+        if self.next_is(vec![TokenType::Equal]) {
+            let token = self.previous().clone();
+            let value = self.assignment()?;
+
+            match expr {
+                Expr::Var(token) => {
+                    return Ok(Expr::Assign(token, Box::new(value)));
+                }
+                _ => return Err(ParsingError::InvalidAssignmentError(token)),
+            }
+        }
+
+        Ok(expr)
     }
 
     fn equality(&mut self) -> Result<Expr, ParsingError> {

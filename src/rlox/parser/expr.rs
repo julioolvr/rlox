@@ -7,6 +7,7 @@ pub enum Expr {
     Literal(Literal),
     Unary(Token, Box<Expr>),
     Var(Token),
+    Assign(Token, Box<Expr>),
 }
 
 impl std::fmt::Display for Expr {
@@ -19,6 +20,7 @@ impl std::fmt::Display for Expr {
             Expr::Literal(ref literal) => write!(f, "{}", literal),
             Expr::Unary(ref operator, ref expr) => write!(f, "({} {})", operator.lexeme, expr),
             Expr::Var(ref token) => write!(f, "(var {})", token.lexeme),
+            Expr::Assign(ref token, ref expr) => write!(f, "(assign {} {})", token.lexeme, expr),
         }
     }
 }

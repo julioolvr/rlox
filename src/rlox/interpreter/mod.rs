@@ -54,7 +54,7 @@ impl Interpreter {
         }
     }
 
-    fn interpret_expr(&self, expr: &Expr) -> Result<LoxValue, RuntimeError> {
+    fn interpret_expr(&mut self, expr: &Expr) -> Result<LoxValue, RuntimeError> {
         match *expr {
             Expr::Literal(ref literal) => {
                 if let Some(value) = literal.value() {
@@ -162,6 +162,14 @@ impl Interpreter {
             Expr::Var(ref token) => {
                 match self.env.get(&token.lexeme) {
                     Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                }
+            }
+            Expr::Assign(ref token, ref expr) => {
+                let value = self.interpret_expr(expr)?;
+
+                match self.env.assign(&token.lexeme, value.clone()) {
+                    Ok(_) => Ok(value),
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 }
             }
