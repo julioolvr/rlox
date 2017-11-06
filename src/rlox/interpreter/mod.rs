@@ -262,6 +262,25 @@ impl Interpreter {
 
                 self.interpret_expr(right)
             }
+            Expr::Call(ref callee, ref arguments, ref token) => {
+                let callable = self.interpret_expr(callee)?
+                    .get_callable()
+                    .ok_or_else(|| RuntimeError::CallOnNonCallable(token.clone()))?;
+
+                let mut evaluated_args: Vec<LoxValue> = Vec::new();
+
+                for arg in arguments {
+                    evaluated_args.push(self.interpret_expr(arg)?);
+                }
+
+                if arguments.len() != callable.arity() {
+                    return Err(RuntimeError::WrongArity(token.clone(),
+                                                        arguments.len(),
+                                                        callable.arity()));
+                }
+
+                callable.call(&self, evaluated_args)
+            }
         }
     }
 }

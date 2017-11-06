@@ -15,6 +15,8 @@ pub enum RuntimeError {
     LessEqualNonNumbers(Token),
     DivideByZeroError(Token),
     UndefinedVariable(Token),
+    CallOnNonCallable(Token),
+    WrongArity(Token, usize, usize),
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -77,6 +79,16 @@ impl std::fmt::Display for RuntimeError {
                        token.line,
                        token.lexeme)
             }
+            RuntimeError::CallOnNonCallable(ref token) => {
+                write!(f, "[line {}] Attempted to call on non-callable", token.line)
+            }
+            RuntimeError::WrongArity(ref token, actual, expected) => {
+                write!(f,
+                       "[line {}] Function arity error, expected {} arguments but got {}",
+                       token.line,
+                       expected,
+                       actual)
+            }
         }
     }
 }
@@ -96,6 +108,8 @@ impl std::error::Error for RuntimeError {
             RuntimeError::LessEqualNonNumbers(_) => "LessEqualNonNumbers",
             RuntimeError::DivideByZeroError(_) => "DivideByZeroError",
             RuntimeError::UndefinedVariable(_) => "UndefinedVariable",
+            RuntimeError::CallOnNonCallable(_) => "CallOnNonCallable",
+            RuntimeError::WrongArity(_, _, _) => "WrongArity",
         }
     }
 }

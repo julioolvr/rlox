@@ -1,6 +1,7 @@
 mod errors;
 
 use std;
+use rlox::callables::{Callable, LoxFunc};
 pub use self::errors::ValueError;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -8,6 +9,7 @@ pub enum LoxValue {
     Number(f64),
     String(String),
     Bool(bool),
+    _Func,
     Nil,
 }
 
@@ -17,6 +19,7 @@ impl std::fmt::Display for LoxValue {
             LoxValue::Number(number) => write!(f, "{}", number),
             LoxValue::String(ref string) => write!(f, "{}", string),
             LoxValue::Bool(b) => write!(f, "{}", b),
+            LoxValue::_Func => f.write_str("func"),
             LoxValue::Nil => f.write_str("nil"),
         }
     }
@@ -29,6 +32,7 @@ impl LoxValue {
             LoxValue::String(_) => true,
             LoxValue::Bool(b) => b,
             LoxValue::Nil => false,
+            LoxValue::_Func => true,
         }
     }
 
@@ -144,5 +148,12 @@ impl LoxValue {
 
     pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
         Ok(LoxValue::Bool(self == other))
+    }
+
+    pub fn get_callable(&self) -> Option<Box<Callable>> {
+        match *self {
+            LoxValue::_Func => Some(Box::new(LoxFunc {})),
+            _ => None
+        }
     }
 }

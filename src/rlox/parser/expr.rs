@@ -1,6 +1,7 @@
 use std;
 use rlox::token::{Token, Literal};
 
+#[derive(Debug)]
 pub enum Expr {
     Binary(Box<Expr>, Token, Box<Expr>),
     Grouping(Box<Expr>),
@@ -9,6 +10,7 @@ pub enum Expr {
     Var(Token),
     Assign(Token, Box<Expr>),
     Logical(Box<Expr>, Token, Box<Expr>),
+    Call(Box<Expr>, Vec<Expr>, Token),
 }
 
 impl std::fmt::Display for Expr {
@@ -24,6 +26,9 @@ impl std::fmt::Display for Expr {
             Expr::Assign(ref token, ref expr) => write!(f, "(assign {} {})", token.lexeme, expr),
             Expr::Logical(ref left, ref operator, ref right) => {
                 write!(f, "({} {} {})", operator.lexeme, left, right)
+            }
+            Expr::Call(ref callee, ref arguments, _) => {
+                write!(f, "(call {} {:?})", callee, arguments)
             }
         }
     }

@@ -286,7 +286,39 @@ impl TokenParser {
             return Ok(Expr::Unary(operator, Box::new(right)));
         }
 
-        self.primary()
+        self.call()
+    }
+
+    fn call(&mut self) -> Result<Expr, ParsingError> {
+        let mut expr = self.primary()?;
+
+        while self.next_is(vec![TokenType::LeftParen]) {
+            expr = self.finish_call(expr)?;
+        }
+
+        Ok(expr)
+    }
+
+    fn finish_call(&mut self, callee: Expr) -> Result<Expr, ParsingError> {
+        let mut arguments: Vec<Expr> = Vec::new();
+
+        if !self.check(TokenType::RightParen) {
+            arguments.push(self.expression()?);
+
+            while self.next_is(vec![TokenType::Comma]) {
+                if arguments.len() >= 8 {
+                    // TODO: The reference interpreter doesn't bail on this error,
+                    // it keeps on parsing but reports it.
+                    return Err(ParsingError::TooManyArgumentsError);
+                }
+                arguments.push(self.expression()?);
+            }
+        }
+
+        let paren = self.consume(TokenType::RightParen,
+                                 "Expect `)` after arguments.".to_string())?;
+
+        Ok(Expr::Call(Box::new(callee), arguments, paren))
     }
 
     fn primary(&mut self) -> Result<Expr, ParsingError> {
