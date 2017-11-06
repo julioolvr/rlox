@@ -1,15 +1,16 @@
 mod errors;
 
 use std;
-use rlox::callables::{Callable, LoxFunc};
+use std::rc::Rc;
+use rlox::callables::Callable;
 pub use self::errors::ValueError;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum LoxValue {
     Number(f64),
     String(String),
     Bool(bool),
-    _Func,
+    Func(Rc<Callable>),
     Nil,
 }
 
@@ -19,20 +20,33 @@ impl std::fmt::Display for LoxValue {
             LoxValue::Number(number) => write!(f, "{}", number),
             LoxValue::String(ref string) => write!(f, "{}", string),
             LoxValue::Bool(b) => write!(f, "{}", b),
-            LoxValue::_Func => f.write_str("func"),
+            LoxValue::Func(_) => f.write_str("func"),
             LoxValue::Nil => f.write_str("nil"),
         }
     }
 }
 
 impl LoxValue {
+    // TODO: Here I'm implementing this clone method without deriving the
+    // std::clone::Clone trait because that requires all members to implement
+    // Clone too. The signature of the clone method in the Clone trait uses
+    // Self, which means I cannot use it in Callable or otherwise the
+    // trait won't be object-safe.
+    pub fn clone(&self) -> LoxValue {
+        match *self {
+            LoxValue::Number(number) => LoxValue::Number(number),
+            LoxValue::String(ref string) => LoxValue::String(string.clone()),
+            LoxValue::Bool(b) => LoxValue::Bool(b),
+            LoxValue::Nil => LoxValue::Nil,
+            LoxValue::Func(ref func) => LoxValue::Func(func.clone()),
+        }
+    }
+
     pub fn is_truthy(&self) -> bool {
         match *self {
-            LoxValue::Number(_) => true,
-            LoxValue::String(_) => true,
             LoxValue::Bool(b) => b,
             LoxValue::Nil => false,
-            LoxValue::_Func => true,
+            _ => true,
         }
     }
 
@@ -143,16 +157,51 @@ impl LoxValue {
     }
 
     pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
-        Ok(LoxValue::Bool(self != other))
+        let is_equal = self.is_equal(other)?;
+
+        if let LoxValue::Bool(is_equal) = is_equal {
+            Ok(LoxValue::Bool(!is_equal))
+        } else {
+            unreachable!()
+        }
     }
 
     pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
-        Ok(LoxValue::Bool(self == other))
+        let result = match *self {
+            LoxValue::Number(number) => {
+                match *other {
+                    LoxValue::Number(other) => number == other,
+                    _ => false
+                }
+            },
+            LoxValue::String(ref string) => {
+                match *other {
+                    LoxValue::String(ref other) => string == other,
+                    _ => false
+                }
+            },
+            LoxValue::Bool(b) => {
+                match *other {
+                    LoxValue::Bool(other) => b == other,
+                    _ => false
+                }
+            },
+            LoxValue::Nil => {
+                match *other {
+                    LoxValue::Nil => true,
+                    _ => false
+                }
+            },
+            // TODO: Figure out how to check if two `Rc`s reference the same value
+            LoxValue::Func(_) => false,
+        };
+
+        Ok(LoxValue::Bool(result))
     }
 
-    pub fn get_callable(&self) -> Option<Box<Callable>> {
+    pub fn get_callable(&self) -> Option<Rc<Callable>> {
         match *self {
-            LoxValue::_Func => Some(Box::new(LoxFunc {})),
+            LoxValue::Func(ref func) => Some(func.clone()),
             _ => None
         }
     }

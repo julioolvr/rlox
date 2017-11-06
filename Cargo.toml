@@ -5,3 +5,4 @@ authors = ["Julio Olivera <julio.olvr@gmail.com>"]
 
 [dependencies]
 lazy_static = "0.2"
+time = "0.1.38"

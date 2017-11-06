@@ -12,7 +12,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Interpreter {
-        Interpreter { env: Some(Environment::new()) }
+        Interpreter { env: Some(Environment::global()) }
     }
 
     pub fn interpret(&mut self, stmts: Vec<Stmt>) -> Option<RuntimeError> {
@@ -227,7 +227,7 @@ impl Interpreter {
                     return Err(RuntimeError::InternalError("Missing environment when retrieving variable".to_string()));
                 }
 
-                match self.env.as_mut().unwrap().get(&token.lexeme) {
+                match self.env.as_ref().unwrap().get(&token.lexeme) {
                     Ok(value) => Ok(value.clone()),
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 }

@@ -1,8 +1,10 @@
 use std::collections::hash_map::HashMap;
 mod errors;
 
+use std::rc::Rc;
 use self::errors::EnvironmentError;
 use rlox::lox_value::LoxValue;
+use rlox::callables::native;
 
 pub struct Environment {
     values: HashMap<String, LoxValue>,
@@ -15,6 +17,15 @@ impl Environment {
             values: HashMap::new(),
             enclosing: Box::new(None),
         }
+    }
+
+    pub fn global() -> Environment {
+        let mut env = Environment::new();
+
+        env.define("clock".to_string(),
+                   LoxValue::Func(Rc::new(native::ClockFunc::new())));
+
+        env
     }
 
     pub fn from_parent(parent: Environment) -> Environment {
