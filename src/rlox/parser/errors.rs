@@ -7,6 +7,7 @@ pub enum ParsingError {
     UnexpectedEofError,
     InvalidAssignmentError(Token),
     TooManyArgumentsError,
+    TooManyParametersError,
     InternalError(String)
 }
 
@@ -25,7 +26,8 @@ impl std::fmt::Display for ParsingError {
                 write!(f, "[line {}] Invalid assignment target", token.line)
             }
             ParsingError::InternalError(ref message) => write!(f, "Internal error: {}", message),
-            ParsingError::TooManyArgumentsError => f.write_str("Too many arguments, max number is 8")
+            ParsingError::TooManyArgumentsError => f.write_str("Too many arguments, max number is 8"),
+            ParsingError::TooManyParametersError => f.write_str("Too many parameters, max number is 8")
         }
     }
 }
@@ -37,7 +39,8 @@ impl std::error::Error for ParsingError {
             ParsingError::UnexpectedEofError => "UnexpectedEofError",
             ParsingError::InvalidAssignmentError(_) => "InvalidAssignmentError",
             ParsingError::InternalError(_) => "InternalError",
-            ParsingError::TooManyArgumentsError => "TooManyArgumentsError"
+            ParsingError::TooManyArgumentsError => "TooManyArgumentsError",
+            ParsingError::TooManyParametersError => "TooManyParametersError"
         }
     }
 }

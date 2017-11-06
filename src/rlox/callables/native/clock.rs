@@ -19,7 +19,7 @@ impl Callable for ClockFunc {
         0
     }
 
-    fn call(&self, _interpreter: &Interpreter, _arguments: Vec<LoxValue>) -> Result<LoxValue, RuntimeError> {
+    fn call(&self, _interpreter: &mut Interpreter, _arguments: Vec<LoxValue>) -> Result<LoxValue, RuntimeError> {
         Ok(LoxValue::Number(time::get_time().sec as f64))
     }
 }

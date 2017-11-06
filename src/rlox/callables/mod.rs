@@ -9,5 +9,5 @@ pub use self::lox_func::LoxFunc;
 
 pub trait Callable: std::fmt::Debug {
     fn arity(&self) -> usize;
-    fn call(&self, &Interpreter, Vec<LoxValue>) -> Result<LoxValue, RuntimeError>;
+    fn call(&self, &mut Interpreter, Vec<LoxValue>) -> Result<LoxValue, RuntimeError>;
 }

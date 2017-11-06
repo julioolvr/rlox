@@ -33,6 +33,8 @@ impl TokenParser {
     fn declaration(&mut self) -> Result<Stmt, ParsingError> {
         let statement = if self.next_is(vec![TokenType::Var]) {
             self.var_declaration()
+        } else if self.next_is(vec![TokenType::Fun]) {
+            self.fun_declaration("function")
         } else {
             self.statement()
         };
@@ -58,6 +60,40 @@ impl TokenParser {
         self.consume(TokenType::Semicolon,
                      "Expect ';' after variable declaration.".to_string())?;
         Ok(Stmt::Var(name, initial_value))
+    }
+
+    fn fun_declaration(&mut self, kind: &'static str) -> Result<Stmt, ParsingError> {
+        let name = self.consume(TokenType::Identifier, format!("Expected {} name.", kind))?;
+
+        self.consume(TokenType::LeftParen,
+                     format!("Expected `(` after {} name.", kind))?;
+        let mut parameters: Vec<Token> = Vec::new();
+
+        if !self.check(TokenType::RightParen) {
+            parameters.push(self.consume(TokenType::Identifier,
+                                         "Expected parameter name".to_string())?);
+
+            while self.next_is(vec![TokenType::Comma]) {
+                if parameters.len() >= 8 {
+                    // TODO: The reference interpreter doesn't bail on this error,
+                    // it keeps on parsing but reports it.
+                    return Err(ParsingError::TooManyParametersError);
+                }
+
+                parameters.push(self.consume(TokenType::Identifier,
+                                             "Expected parameter name".to_string())?)
+            }
+        }
+
+        self.consume(TokenType::RightParen,
+                     "Expect `)` after parameters.".to_string())?;
+
+        self.consume(TokenType::LeftBrace,
+                     format!("Expected `{{` before {} body.", kind))?;
+
+        let body = self.block_statement()?;
+
+        Ok(Stmt::Func(name, parameters, Box::new(body)))
     }
 
     fn statement(&mut self) -> Result<Stmt, ParsingError> {

@@ -1,10 +1,13 @@
 pub mod errors;
 
+use std::rc::Rc;
+
 use self::errors::RuntimeError;
 use rlox::lox_value::{LoxValue, ValueError};
 use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
 use rlox::environment::Environment;
+use rlox::callables::LoxFunc;
 
 pub struct Interpreter {
     env: Option<Environment>,
@@ -64,20 +67,7 @@ impl Interpreter {
 
                 let parent_env = parent_env.unwrap();
                 let new_env = Environment::from_parent(parent_env);
-                self.env = Some(new_env);
-
-                for stmt in statements {
-                    if let Some(err) = self.interpret_stmt(stmt) {
-                        return Some(err);
-                    }
-                }
-
-                if self.env.is_none() {
-                    return Some(RuntimeError::InternalError("Missing environment after leaving block".to_string()));
-                }
-
-                self.env = self.env.take().unwrap().pop();
-                None
+                self.interpret_block(statements, new_env)
             }
             Stmt::If(ref condition, ref then_branch, ref else_branch) => {
                 let condition_result = match self.interpret_expr(condition) {
@@ -114,7 +104,38 @@ impl Interpreter {
 
                 None
             }
+            Stmt::Func(ref name, _, _) => {
+                let func = LoxValue::Func(Rc::new(LoxFunc::new(stmt.clone())));
+
+                match self.env.as_mut() {
+                    Some(env) => env.define(name.lexeme.clone(), func),
+                    None => return Some(RuntimeError::InternalError("Missing environment when setting a function".to_string())),
+                }
+
+                None
+            }
         }
+    }
+
+    pub fn interpret_block(&mut self,
+                           statements: &Vec<Stmt>,
+                           environment: Environment)
+                           -> Option<RuntimeError> {
+        self.env = Some(environment);
+
+        for ref stmt in statements {
+            if let Some(err) = self.interpret_stmt(stmt) {
+                return Some(err);
+            }
+        }
+
+        if self.env.is_none() {
+            return Some(RuntimeError::InternalError("Missing environment after leaving block"
+                                                        .to_string()));
+        }
+
+        self.env = self.env.take().unwrap().pop();
+        None
     }
 
     fn interpret_expr(&mut self, expr: &Expr) -> Result<LoxValue, RuntimeError> {
@@ -279,7 +300,7 @@ impl Interpreter {
                                                         callable.arity()));
                 }
 
-                callable.call(&self, evaluated_args)
+                callable.call(self, evaluated_args)
             }
         }
     }
