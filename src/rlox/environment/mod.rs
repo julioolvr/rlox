@@ -6,6 +6,7 @@ use self::errors::EnvironmentError;
 use rlox::lox_value::LoxValue;
 use rlox::callables::native;
 
+#[derive(Debug)]
 pub struct Environment {
     values: HashMap<String, LoxValue>,
     enclosing: Box<Option<Environment>>,
@@ -26,13 +27,6 @@ impl Environment {
                    LoxValue::Func(Rc::new(native::ClockFunc::new())));
 
         env
-    }
-
-    pub fn from_parent(parent: Environment) -> Environment {
-        Environment {
-            values: HashMap::new(),
-            enclosing: Box::new(Some(parent)),
-        }
     }
 
     pub fn define(&mut self, key: String, val: LoxValue) {
@@ -61,6 +55,10 @@ impl Environment {
                 }
             }
         }
+    }
+
+    pub fn enclose_in(&mut self, parent: Environment) {
+        self.enclosing = Box::new(Some(parent));
     }
 
     /// Drop this environment and return its parent

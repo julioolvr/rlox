@@ -32,8 +32,7 @@ impl Callable for LoxFunc {
             interpreter: &mut Interpreter,
             arguments: Vec<LoxValue>)
             -> Result<LoxValue, RuntimeError> {
-        // TODO: Maybe I need to take the globals from the interpreter
-        let mut env = Environment::global();
+        let mut env = Environment::new();
 
         let (parameters, body) = match self.declaration {
             Stmt::Func(_, ref parameters, ref body) => (parameters, body),
@@ -53,8 +52,9 @@ impl Callable for LoxFunc {
                            .clone());
         }
 
-        interpreter.interpret_block(body, env);
-
-        Ok(LoxValue::Nil)
+        match interpreter.interpret_block(body, env)? {
+            Some(result) => Ok(result),
+            None => Ok(LoxValue::Nil)
+        }
     }
 }

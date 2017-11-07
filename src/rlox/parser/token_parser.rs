@@ -107,6 +107,8 @@ impl TokenParser {
             self.while_statement()
         } else if self.next_is(vec![TokenType::For]) {
             self.for_statement()
+        } else if self.next_is(vec![TokenType::Return]) {
+            self.return_statement()
         } else {
             self.expression_statement()
         }
@@ -206,6 +208,21 @@ impl TokenParser {
         }
 
         Ok(body)
+    }
+
+    fn return_statement(&mut self) -> Result<Stmt, ParsingError> {
+        let keyword = self.previous().clone();
+
+        let value = if !self.check(TokenType::Semicolon) {
+            self.expression()?
+        } else {
+            Expr::Literal(Literal::Nil)
+        };
+
+        self.consume(TokenType::Semicolon,
+                     "Expect `;` after return value.".to_string())?;
+
+        Ok(Stmt::Return(keyword, Box::new(value)))
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
