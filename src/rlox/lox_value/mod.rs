@@ -26,13 +26,8 @@ impl std::fmt::Display for LoxValue {
     }
 }
 
-impl LoxValue {
-    // TODO: Here I'm implementing this clone method without deriving the
-    // std::clone::Clone trait because that requires all members to implement
-    // Clone too. The signature of the clone method in the Clone trait uses
-    // Self, which means I cannot use it in Callable or otherwise the
-    // trait won't be object-safe.
-    pub fn clone(&self) -> LoxValue {
+impl std::clone::Clone for LoxValue {
+    fn clone(&self) -> LoxValue {
         match *self {
             LoxValue::Number(number) => LoxValue::Number(number),
             LoxValue::String(ref string) => LoxValue::String(string.clone()),
@@ -41,7 +36,9 @@ impl LoxValue {
             LoxValue::Func(ref func) => LoxValue::Func(func.clone()),
         }
     }
+}
 
+impl LoxValue {
     pub fn is_truthy(&self) -> bool {
         match *self {
             LoxValue::Bool(b) => b,
