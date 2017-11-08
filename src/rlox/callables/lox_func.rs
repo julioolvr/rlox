@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use rlox::callables::Callable;
 use rlox::parser::Stmt;
 use rlox::interpreter::Interpreter;
@@ -8,13 +11,14 @@ use rlox::lox_value::LoxValue;
 #[derive(Debug)]
 pub struct LoxFunc {
     declaration: Stmt,
+    closure: Rc<RefCell<Environment>>
 }
 
 impl LoxFunc {
-    pub fn new(stmt: Stmt) -> LoxFunc {
+    pub fn new(stmt: Stmt, closure: Rc<RefCell<Environment>>) -> LoxFunc {
         // TODO: Would be great to have a compile-time check for this instead of panicking
         match stmt {
-            Stmt::Func(_, _, _) => LoxFunc { declaration: stmt },
+            Stmt::Func(_, _, _) => LoxFunc { declaration: stmt, closure },
             _ => panic!("Cannot build a LoxFunc with a Stmt other than Stmt::Func"),
         }
     }
@@ -32,7 +36,7 @@ impl Callable for LoxFunc {
             interpreter: &mut Interpreter,
             arguments: Vec<LoxValue>)
             -> Result<LoxValue, RuntimeError> {
-        let mut env = Environment::new();
+        let mut env = Environment::from_parent(self.closure.clone());
 
         let (parameters, body) = match self.declaration {
             Stmt::Func(_, ref parameters, ref body) => (parameters, body),
@@ -52,7 +56,7 @@ impl Callable for LoxFunc {
                            .clone());
         }
 
-        match interpreter.interpret_block(body, env)? {
+        match interpreter.interpret_block(body, RefCell::new(env))? {
             Some(result) => Ok(result),
             None => Ok(LoxValue::Nil)
         }
