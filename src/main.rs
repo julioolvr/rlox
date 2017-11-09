@@ -1,8 +1,4 @@
-#[macro_use]
-extern crate lazy_static;
-extern crate time;
-
-mod rlox;
+extern crate rlox;
 use std::env;
 
 fn main() {
