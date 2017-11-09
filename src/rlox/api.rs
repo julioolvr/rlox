@@ -19,7 +19,7 @@ pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
 
 pub fn run_repl<R: io::BufRead, W: io::Write>(reader: R, writer: W) {
     println!("Welcome to the rlox prompt");
-    println!("^C to exit\n");
+    println!("^D to exit\n");
 
     let user_input = ReplIterator::new(reader, writer);
     let mut interpreter = Interpreter::new();
@@ -89,10 +89,11 @@ impl<R: io::BufRead, W: io::Write> Iterator for ReplIterator<R, W> {
             .expect("Error flushing stdout/writer");
 
         let mut input = String::new();
-        self.reader
-            .read_line(&mut input)
-            .expect("Error reading input line");
 
-        Some(String::from(input.trim()))
+        match self.reader.read_line(&mut input) {
+            Ok(0) => None,
+            Ok(_) => Some(String::from(input.trim())),
+            Err(_) => panic!("Error reading input line")
+        }
     }
 }
