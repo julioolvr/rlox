@@ -1,5 +1,7 @@
 extern crate rlox;
+
 use std::env;
+use std::io;
 
 fn main() {
     let mut args = env::args();
@@ -18,6 +20,7 @@ fn main() {
             }
         }
     } else {
-        rlox::run_repl();
+        let stdin = io::stdin();
+        rlox::run_repl(stdin.lock(), io::stdout());
     }
 }

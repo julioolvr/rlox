@@ -1,6 +1,5 @@
 use std::io;
 use std::io::Read;
-use std::io::Write;
 use std::fs::File;
 
 use rlox::scanner::Scanner;
@@ -18,11 +17,11 @@ pub fn run_file(path: &str) -> Result<(), Vec<Error>> {
     run(&mut interpreter, contents)
 }
 
-pub fn run_repl() {
+pub fn run_repl<R: io::BufRead, W: io::Write>(reader: R, writer: W) {
     println!("Welcome to the rlox prompt");
     println!("^C to exit\n");
 
-    let user_input = ReplIterator {};
+    let user_input = ReplIterator::new(reader, writer);
     let mut interpreter = Interpreter::new();
 
     for input in user_input {
@@ -67,17 +66,30 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
     }
 }
 
-struct ReplIterator {}
+struct ReplIterator<R: io::BufRead, W: io::Write> {
+    reader: R,
+    writer: W,
+}
 
-impl Iterator for ReplIterator {
+impl<R: io::BufRead, W: io::Write> ReplIterator<R, W> {
+    fn new(reader: R, writer: W) -> ReplIterator<R, W> {
+        ReplIterator { reader, writer }
+    }
+}
+
+impl<R: io::BufRead, W: io::Write> Iterator for ReplIterator<R, W> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        print!(">> ");
-        io::stdout().flush().expect("Error flushing to stdout");
+        self.writer
+            .write_all(b">> ")
+            .expect("Error writing to stdout/writer");
+        self.writer
+            .flush()
+            .expect("Error flushing stdout/writer");
 
         let mut input = String::new();
-        io::stdin()
+        self.reader
             .read_line(&mut input)
             .expect("Error reading input line");
 
