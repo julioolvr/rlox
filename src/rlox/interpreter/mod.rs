@@ -1,5 +1,6 @@
 pub mod errors;
 
+use std::io;
 use std::rc::Rc;
 use std::cell::RefCell;
 
@@ -12,11 +13,15 @@ use rlox::callables::LoxFunc;
 
 pub struct Interpreter {
     env: Rc<RefCell<Environment>>,
+    writer: Rc<RefCell<io::Write>>,
 }
 
 impl Interpreter {
-    pub fn new() -> Interpreter {
-        Interpreter { env: Rc::new(RefCell::new(Environment::global())) }
+    pub fn new(writer: Rc<RefCell<io::Write>>) -> Interpreter {
+        Interpreter {
+            env: Rc::new(RefCell::new(Environment::global())),
+            writer,
+        }
     }
 
     pub fn interpret(&mut self, stmts: Vec<Stmt>) -> Option<RuntimeError> {
@@ -34,7 +39,10 @@ impl Interpreter {
             Stmt::Print(ref expr) => {
                 match self.interpret_expr(expr) {
                     Ok(val) => {
-                        println!("{}", val);
+                        self.writer
+                            .borrow_mut()
+                            .write_all(format!("{}\n", val).as_ref())
+                            .expect("Error writing to stdout/writer");
                         Ok(None)
                     }
                     Err(err) => Err(err),
