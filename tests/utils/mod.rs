@@ -5,7 +5,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 pub fn execute(code: &str) -> Vec<String> {
-
     let mut input = Cursor::new(code.to_string().replace("\n", "").into_bytes());
     let output: Vec<u8> = Vec::new();
     let repl_writer = Rc::new(RefCell::new(Cursor::new(output)));

@@ -4,7 +4,8 @@ extern crate rlox;
 mod utils;
 
 #[test]
-fn something() {
+#[ignore]
+fn closure_environment_mutation() {
     let output = utils::execute(r#"
         var a = "global";
         {
