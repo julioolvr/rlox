@@ -34,6 +34,10 @@ impl Interpreter {
         None
     }
 
+    pub fn resolve(&self, expr: &Expr, distance: usize) {
+        unimplemented!()
+    }
+
     fn interpret_stmt(&mut self, stmt: &Stmt) -> Result<Option<LoxValue>, RuntimeError> {
         match *stmt {
             Stmt::Print(ref expr) => {

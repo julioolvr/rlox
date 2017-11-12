@@ -8,6 +8,7 @@ use rlox::scanner::Scanner;
 use rlox::parser::Parser;
 use rlox::errors::Error;
 use rlox::interpreter::Interpreter;
+use rlox::resolver::Resolver;
 
 // TODO: The api for the writer is kind of ugly, I feel like implementation details
 // are leaking from it. Revisit at some point.
@@ -65,6 +66,9 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
 
     match ast {
         Ok(ast) => {
+            let mut resolver = Resolver::new();
+            resolver.resolve_ast(&ast, interpreter);
+
             match interpreter.interpret(ast) {
                 Some(err) => Err(vec![Error::Runtime(err)]),
                 None => Ok(()),

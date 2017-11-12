@@ -6,4 +6,5 @@ mod lox_value;
 mod interpreter;
 mod environment;
 mod callables;
+mod resolver;
 pub mod api;
