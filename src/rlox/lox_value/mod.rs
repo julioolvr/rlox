@@ -1,10 +1,12 @@
 mod errors;
+mod lox_class;
+mod lox_instance;
 
 use std;
 use std::rc::Rc;
 use rlox::callables::Callable;
-use rlox::callables::LoxClass;
-use rlox::callables::LoxClassInternal;
+pub use self::lox_class::{LoxClass, LoxClassInternal};
+pub use self::lox_instance::LoxInstance;
 pub use self::errors::ValueError;
 
 #[derive(Debug)]
@@ -14,7 +16,7 @@ pub enum LoxValue {
     Bool(bool),
     Func(Rc<Callable>),
     Class(Rc<LoxClass>),
-    Instance(Rc<LoxClassInternal>),
+    Instance(Rc<LoxInstance>),
     Nil,
 }
 
@@ -26,7 +28,7 @@ impl std::fmt::Display for LoxValue {
             LoxValue::Bool(b) => write!(f, "{}", b),
             LoxValue::Func(_) => f.write_str("func"),
             LoxValue::Class(ref class) => write!(f, "class <{}>", class.get_name()),
-            LoxValue::Instance(ref class) => write!(f, "instance of <{}>", class.name),
+            LoxValue::Instance(ref class) => write!(f, "instance of <{}>", class.get_class_name()),
             LoxValue::Nil => f.write_str("nil"),
         }
     }

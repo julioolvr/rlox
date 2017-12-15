@@ -17,6 +17,8 @@ pub enum RuntimeError {
     UndefinedVariable(Token),
     CallOnNonCallable(Token),
     WrongArity(Token, usize, usize),
+    InvalidGetTarget(Token),
+    UndefinedProperty(String),
 }
 
 impl std::fmt::Display for RuntimeError {
@@ -89,6 +91,15 @@ impl std::fmt::Display for RuntimeError {
                        expected,
                        actual)
             }
+            RuntimeError::InvalidGetTarget(ref token) => {
+                write!(f,
+                       "[line {}] Only instances have properties, tried to access `{}` in non-instance",
+                       token.line,
+                       token.lexeme)
+            }
+            RuntimeError::UndefinedProperty(ref name) => {
+                write!(f, "Undefined property `{}`.", name) // TODO: Try to get the line number
+            }
         }
     }
 }
@@ -110,6 +121,8 @@ impl std::error::Error for RuntimeError {
             RuntimeError::UndefinedVariable(_) => "UndefinedVariable",
             RuntimeError::CallOnNonCallable(_) => "CallOnNonCallable",
             RuntimeError::WrongArity(_, _, _) => "WrongArity",
+            RuntimeError::InvalidGetTarget(_) => "InvalidGetTarget",
+            RuntimeError::UndefinedProperty(_) => "UndefinedProperty",
         }
     }
 }

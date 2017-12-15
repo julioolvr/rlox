@@ -364,8 +364,17 @@ impl TokenParser {
     fn call(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.primary()?;
 
-        while self.next_is(vec![TokenType::LeftParen]) {
-            expr = self.finish_call(expr)?;
+        loop {
+            if self.next_is(vec![TokenType::LeftParen]) {
+                expr = self.finish_call(expr)?;
+            } else if self.next_is(vec![TokenType::Dot]) {
+                let name =
+                    self.consume(TokenType::Identifier,
+                                 "Expected property name after `.`.".to_string())?;
+                expr = Expr::Get(Box::new(expr), name);
+            } else {
+                break;
+            }
         }
 
         Ok(expr)

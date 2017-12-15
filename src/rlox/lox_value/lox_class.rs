@@ -3,7 +3,7 @@ use std::rc::Rc;
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
 use rlox::interpreter::errors::RuntimeError;
-use rlox::lox_value::LoxValue;
+use rlox::lox_value::{LoxValue, LoxInstance};
 
 #[derive(Debug)]
 pub struct LoxClass {
@@ -20,8 +20,8 @@ impl LoxClass {
         LoxClass { internal: Rc::new(LoxClassInternal { name }) }
     }
 
-    pub fn instantiate(&self) -> Result<LoxValue, RuntimeError> {
-        Ok(LoxValue::Instance(self.internal.clone()))
+    pub fn instantiate(&self) -> Result<LoxInstance, RuntimeError> {
+        Ok(LoxInstance::new(self.internal.clone()))
     }
 
     pub fn get_name(&self) -> &str {
@@ -38,6 +38,6 @@ impl Callable for LoxClass {
             _interpreter: &mut Interpreter,
             _arguments: Vec<LoxValue>)
             -> Result<LoxValue, RuntimeError> {
-        self.instantiate()
+        Ok(LoxValue::Instance(Rc::new(self.instantiate()?)))
     }
 }

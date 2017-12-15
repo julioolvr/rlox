@@ -5,11 +5,11 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use self::errors::RuntimeError;
-use rlox::lox_value::{LoxValue, ValueError};
+use rlox::lox_value::{LoxValue, LoxClass, ValueError};
 use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
 use rlox::environment::Environment;
-use rlox::callables::{LoxFunc, LoxClass};
+use rlox::callables::LoxFunc;
 
 pub struct Interpreter {
     env: Rc<RefCell<Environment>>,
@@ -322,6 +322,15 @@ impl Interpreter {
                 }
 
                 callable.call(self, evaluated_args)
+            }
+            Expr::Get(ref target, ref token) => {
+                let result = self.interpret_expr(target)?;
+
+                match result {
+                    // TODO: Don't clone!
+                    LoxValue::Instance(ref instance) => Ok(instance.get(&token.lexeme)?.clone()),
+                    _ => Err(RuntimeError::InvalidGetTarget(token.clone())),
+                }
             }
         }
     }

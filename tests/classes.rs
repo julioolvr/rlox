@@ -40,3 +40,14 @@ fn printing_class_instance_shows_class_name() {
 
     assert_eq!(output[0], "instance of <Something>");
 }
+
+#[test]
+fn read_property_from_instance_is_a_runtime_error() {
+    let output = utils::execute(r#"
+        class Something {}
+        var instance = Something();
+        print instance.someProperty;
+    "#);
+
+    assert!(output[0].ends_with("Undefined property `someProperty`."));
+}

@@ -99,6 +99,9 @@ impl Resolver {
             Expr::Unary(_, ref mut expr) => {
                 self.resolve_expression(expr);
             }
+            Expr::Get(ref mut target, _) => {
+                self.resolve_expression(target);
+            }
         }
     }
 
