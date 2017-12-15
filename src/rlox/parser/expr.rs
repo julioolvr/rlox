@@ -12,6 +12,7 @@ pub enum Expr {
     Logical(Box<Expr>, Token, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>, Token),
     Get(Box<Expr>, Token),
+    Set(Box<Expr>, Token, Box<Expr>),
 }
 
 impl std::fmt::Display for Expr {
@@ -32,6 +33,7 @@ impl std::fmt::Display for Expr {
                 write!(f, "(call {} {:?})", callee, arguments)
             }
             Expr::Get(ref expr, ref token) => write!(f, "(get {} {})", token.lexeme, expr),
+            Expr::Set(ref expr, ref token, _) => write!(f, "(set {} {})", token.lexeme, expr),
         }
     }
 }

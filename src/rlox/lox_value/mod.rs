@@ -4,6 +4,8 @@ mod lox_instance;
 
 use std;
 use std::rc::Rc;
+use std::cell::RefCell;
+
 use rlox::callables::Callable;
 pub use self::lox_class::{LoxClass, LoxClassInternal};
 pub use self::lox_instance::LoxInstance;
@@ -16,7 +18,7 @@ pub enum LoxValue {
     Bool(bool),
     Func(Rc<Callable>),
     Class(Rc<LoxClass>),
-    Instance(Rc<LoxInstance>),
+    Instance(Rc<RefCell<LoxInstance>>),
     Nil,
 }
 
@@ -28,7 +30,9 @@ impl std::fmt::Display for LoxValue {
             LoxValue::Bool(b) => write!(f, "{}", b),
             LoxValue::Func(_) => f.write_str("func"),
             LoxValue::Class(ref class) => write!(f, "class <{}>", class.get_name()),
-            LoxValue::Instance(ref class) => write!(f, "instance of <{}>", class.get_class_name()),
+            LoxValue::Instance(ref instance) => {
+                write!(f, "instance of <{}>", instance.borrow().get_class_name())
+            }
             LoxValue::Nil => f.write_str("nil"),
         }
     }
@@ -43,7 +47,7 @@ impl std::clone::Clone for LoxValue {
             LoxValue::Nil => LoxValue::Nil,
             LoxValue::Func(ref func) => LoxValue::Func(func.clone()),
             LoxValue::Class(ref class) => LoxValue::Class(class.clone()),
-            LoxValue::Instance(ref class) => LoxValue::Instance(class.clone()),
+            LoxValue::Instance(ref instance) => LoxValue::Instance(instance.clone()),
         }
     }
 }

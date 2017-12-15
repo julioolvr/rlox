@@ -51,3 +51,15 @@ fn read_property_from_instance_is_a_runtime_error() {
 
     assert!(output[0].ends_with("Undefined property `someProperty`."));
 }
+
+#[test]
+fn set_property_in_instance() {
+    let output = utils::execute(r#"
+        class Something {}
+        var instance = Something();
+        instance.someProperty = 42;
+        print instance.someProperty;
+    "#);
+
+    assert_eq!(output[0], "42");
+}

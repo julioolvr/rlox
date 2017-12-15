@@ -324,13 +324,33 @@ impl Interpreter {
                 callable.call(self, evaluated_args)
             }
             Expr::Get(ref target, ref token) => {
-                let result = self.interpret_expr(target)?;
+                let resolved_target = self.interpret_expr(target)?;
 
-                match result {
+                match resolved_target {
                     // TODO: Don't clone!
-                    LoxValue::Instance(ref instance) => Ok(instance.get(&token.lexeme)?.clone()),
+                    LoxValue::Instance(ref instance) => {
+                        Ok(instance.borrow().get(&token.lexeme)?.clone())
+                    }
                     _ => Err(RuntimeError::InvalidGetTarget(token.clone())),
                 }
+            }
+            Expr::Set(ref target, ref token, ref expr) => {
+                let resolved_target = self.interpret_expr(target)?;
+
+                let value = match resolved_target {
+                    LoxValue::Instance(instance) => {
+                        let resolved_value = self.interpret_expr(expr)?;
+
+                        // TODO: Don't clone!
+                        instance
+                            .borrow_mut()
+                            .set(&token.lexeme, resolved_value.clone());
+                        resolved_value.clone()
+                    }
+                    _ => return Err(RuntimeError::InvalidGetTarget(token.clone())),
+                };
+
+                Ok(value)
             }
         }
     }

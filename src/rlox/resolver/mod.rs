@@ -102,6 +102,10 @@ impl Resolver {
             Expr::Get(ref mut target, _) => {
                 self.resolve_expression(target);
             }
+            Expr::Set(ref mut target, _, ref mut value) => {
+                self.resolve_expression(target);
+                self.resolve_expression(value);
+            }
         }
     }
 

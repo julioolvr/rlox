@@ -25,6 +25,10 @@ impl LoxInstance {
             .ok_or(RuntimeError::UndefinedProperty(name.to_string()))
     }
 
+    pub fn set(&mut self, name: &str, value: LoxValue) {
+        self.state.insert(name.to_string(), value);
+    }
+
     pub fn get_class_name(&self) -> &str {
         &self.class.name
     }

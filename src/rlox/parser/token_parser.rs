@@ -269,6 +269,7 @@ impl TokenParser {
                 Expr::Var(token, _) => {
                     return Ok(Expr::Assign(token, Box::new(value), None));
                 }
+                Expr::Get(target, token) => return Ok(Expr::Set(target, token, Box::new(value))),
                 _ => return Err(ParsingError::InvalidAssignmentError(token)),
             }
         }

@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
@@ -38,6 +39,6 @@ impl Callable for LoxClass {
             _interpreter: &mut Interpreter,
             _arguments: Vec<LoxValue>)
             -> Result<LoxValue, RuntimeError> {
-        Ok(LoxValue::Instance(Rc::new(self.instantiate()?)))
+        Ok(LoxValue::Instance(Rc::new(RefCell::new(self.instantiate()?))))
     }
 }
