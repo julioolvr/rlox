@@ -11,6 +11,7 @@ pub enum LoxValue {
     String(String),
     Bool(bool),
     Func(Rc<Callable>),
+    Class(String),
     Nil,
 }
 
@@ -21,6 +22,7 @@ impl std::fmt::Display for LoxValue {
             LoxValue::String(ref string) => write!(f, "{}", string),
             LoxValue::Bool(b) => write!(f, "{}", b),
             LoxValue::Func(_) => f.write_str("func"),
+            LoxValue::Class(ref name) => write!(f, "class <{}>", name),
             LoxValue::Nil => f.write_str("nil"),
         }
     }
@@ -34,6 +36,7 @@ impl std::clone::Clone for LoxValue {
             LoxValue::Bool(b) => LoxValue::Bool(b),
             LoxValue::Nil => LoxValue::Nil,
             LoxValue::Func(ref func) => LoxValue::Func(func.clone()),
+            LoxValue::Class(ref name) => LoxValue::Class(name.clone()),
         }
     }
 }
@@ -168,29 +171,30 @@ impl LoxValue {
             LoxValue::Number(number) => {
                 match *other {
                     LoxValue::Number(other) => number == other,
-                    _ => false
+                    _ => false,
                 }
-            },
+            }
             LoxValue::String(ref string) => {
                 match *other {
                     LoxValue::String(ref other) => string == other,
-                    _ => false
+                    _ => false,
                 }
-            },
+            }
             LoxValue::Bool(b) => {
                 match *other {
                     LoxValue::Bool(other) => b == other,
-                    _ => false
+                    _ => false,
                 }
-            },
+            }
             LoxValue::Nil => {
                 match *other {
                     LoxValue::Nil => true,
-                    _ => false
+                    _ => false,
                 }
-            },
+            }
             // TODO: Figure out how to check if two `Rc`s reference the same value
             LoxValue::Func(_) => false,
+            LoxValue::Class(_) => false, // TODO: Or is it?
         };
 
         Ok(LoxValue::Bool(result))
@@ -199,7 +203,7 @@ impl LoxValue {
     pub fn get_callable(&self) -> Option<Rc<Callable>> {
         match *self {
             LoxValue::Func(ref func) => Some(func.clone()),
-            _ => None
+            _ => None,
         }
     }
 }

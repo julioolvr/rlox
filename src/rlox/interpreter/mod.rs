@@ -116,6 +116,13 @@ impl Interpreter {
                 Ok(None)
             }
             Stmt::Return(_, ref expr) => Ok(Some(self.interpret_expr(expr)?)),
+            Stmt::Class(ref token, _) => {
+                let class = LoxValue::Class(token.lexeme.clone());
+                self.env
+                    .borrow_mut()
+                    .define(token.lexeme.clone(), class);
+                Ok(None)
+            }
         }
     }
 

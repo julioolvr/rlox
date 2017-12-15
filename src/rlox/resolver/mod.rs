@@ -53,6 +53,10 @@ impl Resolver {
                 self.resolve_expression(condition);
                 self.resolve_statement(body);
             }
+            Stmt::Class(ref token, _) => {
+                self.declare(token.lexeme.clone());
+                self.define(token.lexeme.clone());
+            }
         }
     }
 

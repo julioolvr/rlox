@@ -31,7 +31,9 @@ impl TokenParser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParsingError> {
-        let statement = if self.next_is(vec![TokenType::Var]) {
+        let statement = if self.next_is(vec![TokenType::Class]) {
+            self.class_declaration()
+        } else if self.next_is(vec![TokenType::Var]) {
             self.var_declaration()
         } else if self.next_is(vec![TokenType::Fun]) {
             self.fun_declaration("function")
@@ -46,6 +48,23 @@ impl TokenParser {
                 Err(err)
             }
         }
+    }
+
+    fn class_declaration(&mut self) -> Result<Stmt, ParsingError> {
+        let name = self.consume(TokenType::Identifier, "Expected class name".to_string())?;
+
+        self.consume(TokenType::LeftBrace,
+                     format!("Expected `{{` before class body."))?;
+
+        let mut methods = Vec::new();
+        while !self.check(TokenType::RightBrace) && !self.is_over() {
+            methods.push(self.fun_declaration("method")?);
+        }
+
+        self.consume(TokenType::RightBrace,
+                     format!("Expected `}}` after class body."))?;
+
+        Ok(Stmt::Class(name, methods))
     }
 
     fn var_declaration(&mut self) -> Result<Stmt, ParsingError> {
