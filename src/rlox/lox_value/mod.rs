@@ -3,6 +3,8 @@ mod errors;
 use std;
 use std::rc::Rc;
 use rlox::callables::Callable;
+use rlox::callables::LoxClass;
+use rlox::callables::LoxClassInternal;
 pub use self::errors::ValueError;
 
 #[derive(Debug)]
@@ -11,7 +13,8 @@ pub enum LoxValue {
     String(String),
     Bool(bool),
     Func(Rc<Callable>),
-    Class(String),
+    Class(Rc<LoxClass>),
+    Instance(Rc<LoxClassInternal>),
     Nil,
 }
 
@@ -22,7 +25,8 @@ impl std::fmt::Display for LoxValue {
             LoxValue::String(ref string) => write!(f, "{}", string),
             LoxValue::Bool(b) => write!(f, "{}", b),
             LoxValue::Func(_) => f.write_str("func"),
-            LoxValue::Class(ref name) => write!(f, "class <{}>", name),
+            LoxValue::Class(ref class) => write!(f, "class <{}>", class.get_name()),
+            LoxValue::Instance(ref class) => write!(f, "instance of <{}>", class.name),
             LoxValue::Nil => f.write_str("nil"),
         }
     }
@@ -36,7 +40,8 @@ impl std::clone::Clone for LoxValue {
             LoxValue::Bool(b) => LoxValue::Bool(b),
             LoxValue::Nil => LoxValue::Nil,
             LoxValue::Func(ref func) => LoxValue::Func(func.clone()),
-            LoxValue::Class(ref name) => LoxValue::Class(name.clone()),
+            LoxValue::Class(ref class) => LoxValue::Class(class.clone()),
+            LoxValue::Instance(ref class) => LoxValue::Instance(class.clone()),
         }
     }
 }
@@ -194,7 +199,9 @@ impl LoxValue {
             }
             // TODO: Figure out how to check if two `Rc`s reference the same value
             LoxValue::Func(_) => false,
-            LoxValue::Class(_) => false, // TODO: Or is it?
+            // TODO: Figure out how to check if two `Rc`s reference the same value
+            LoxValue::Class(_) => false,
+            LoxValue::Instance(_) => false, // TODO: Change
         };
 
         Ok(LoxValue::Bool(result))
@@ -203,6 +210,7 @@ impl LoxValue {
     pub fn get_callable(&self) -> Option<Rc<Callable>> {
         match *self {
             LoxValue::Func(ref func) => Some(func.clone()),
+            LoxValue::Class(ref class) => Some(class.clone()),
             _ => None,
         }
     }
