@@ -65,9 +65,9 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
     }
 
     match ast {
-        Ok(ast) => {
+        Ok(mut ast) => {
             let mut resolver = Resolver::new();
-            resolver.resolve_ast(&ast, interpreter);
+            resolver.resolve_ast(&mut ast);
 
             match interpreter.interpret(ast) {
                 Some(err) => Err(vec![Error::Runtime(err)]),
@@ -85,7 +85,7 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
 
 struct ReplIterator<R: io::BufRead> {
     reader: R,
-    writer: Rc<RefCell<io::Write>>
+    writer: Rc<RefCell<io::Write>>,
 }
 
 impl<R: io::BufRead> ReplIterator<R> {
@@ -112,7 +112,7 @@ impl<R: io::BufRead> Iterator for ReplIterator<R> {
         match self.reader.read_line(&mut input) {
             Ok(0) => None,
             Ok(_) => Some(String::from(input.trim())),
-            Err(_) => panic!("Error reading input line")
+            Err(_) => panic!("Error reading input line"),
         }
     }
 }

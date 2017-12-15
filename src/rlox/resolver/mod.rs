@@ -1,7 +1,6 @@
 use rlox::parser::Stmt;
 use rlox::parser::Expr;
 use rlox::token::Token;
-use rlox::interpreter::Interpreter;
 use std::collections::hash_map::HashMap;
 
 pub struct Resolver {
@@ -13,53 +12,53 @@ impl Resolver {
         Resolver { scopes: Vec::new() }
     }
 
-    pub fn resolve_ast(&mut self, ast: &Vec<Stmt>, interpreter: &mut Interpreter) {
-        for stmt in ast {
-            self.resolve_statement(stmt, interpreter);
+    pub fn resolve_ast(&mut self, ast: &mut Vec<Stmt>) {
+        for ref mut stmt in ast {
+            self.resolve_statement(stmt);
         }
     }
 
-    fn resolve_statement(&mut self, stmt: &Stmt, interpreter: &mut Interpreter) {
+    fn resolve_statement(&mut self, stmt: &mut Stmt) {
         match *stmt {
-            Stmt::Block(ref stmts) => {
+            Stmt::Block(ref mut stmts) => {
                 self.begin_scope();
-                self.resolve_ast(stmts, interpreter);
+                self.resolve_ast(stmts);
                 self.end_scope();
             }
-            Stmt::Var(ref token, ref expr) => {
+            Stmt::Var(ref token, ref mut expr) => {
                 self.declare(token.lexeme.clone());
-                self.resolve_expression(expr, interpreter);
+                self.resolve_expression(expr);
 
                 // TODO: Can I use a reference to the string instead of having to own it?
                 self.define(token.lexeme.clone());
             }
-            Stmt::Func(ref token, ref params, ref body) => {
+            Stmt::Func(ref token, ref params, ref mut body) => {
                 self.declare(token.lexeme.clone());
                 self.define(token.lexeme.clone());
 
-                self.resolve_function(params, body, interpreter);
+                self.resolve_function(params, body);
             }
-            Stmt::Expr(ref expr) => self.resolve_expression(expr, interpreter),
-            Stmt::If(ref condition, ref then_branch, ref else_branch) => {
-                self.resolve_expression(condition, interpreter);
-                self.resolve_statement(then_branch, interpreter);
+            Stmt::Expr(ref mut expr) => self.resolve_expression(expr),
+            Stmt::If(ref mut condition, ref mut then_branch, ref mut else_branch) => {
+                self.resolve_expression(condition);
+                self.resolve_statement(then_branch);
 
-                if let Some(ref else_branch) = **else_branch {
-                    self.resolve_statement(else_branch, interpreter);
+                if let Some(ref mut else_branch) = **else_branch {
+                    self.resolve_statement(else_branch);
                 }
             }
-            Stmt::Print(ref expr) => self.resolve_expression(expr, interpreter),
-            Stmt::Return(_, ref expr) => self.resolve_expression(expr, interpreter),
-            Stmt::While(ref condition, ref body) => {
-                self.resolve_expression(condition, interpreter);
-                self.resolve_statement(body, interpreter);
+            Stmt::Print(ref mut expr) => self.resolve_expression(expr),
+            Stmt::Return(_, ref mut expr) => self.resolve_expression(expr),
+            Stmt::While(ref mut condition, ref mut body) => {
+                self.resolve_expression(condition);
+                self.resolve_statement(body);
             }
         }
     }
 
-    fn resolve_expression(&mut self, expr: &Expr, interpreter: &mut Interpreter) {
+    fn resolve_expression(&mut self, expr: &mut Expr) {
         match *expr {
-            Expr::Var(ref token) => {
+            Expr::Var(ref token, ref mut distance) => {
                 if let Some(scope) = self.scopes.last() {
                     if let Some(is_var_available) = scope.get(&token.lexeme) {
                         if !is_var_available {
@@ -68,50 +67,48 @@ impl Resolver {
                     }
                 }
 
-                self.resolve_local(expr, token, interpreter);
+                *distance = self.resolve_local(token.lexeme.clone());
             }
-            Expr::Assign(ref token, ref expr) => {
-                self.resolve_expression(expr, interpreter);
-                self.resolve_local(expr, token, interpreter);
+            Expr::Assign(ref token, ref mut expr, ref mut distance) => {
+                self.resolve_expression(expr);
+                *distance = self.resolve_local(token.lexeme.clone());
             }
-            Expr::Binary(ref left, _, ref right) => {
-                self.resolve_expression(left, interpreter);
-                self.resolve_expression(right, interpreter);
+            Expr::Binary(ref mut left, _, ref mut right) => {
+                self.resolve_expression(left);
+                self.resolve_expression(right);
             }
-            Expr::Call(ref callee, ref arguments, _) => {
-                self.resolve_expression(callee, interpreter);
+            Expr::Call(ref mut callee, ref mut arguments, _) => {
+                self.resolve_expression(callee);
 
-                for arg in arguments {
-                    self.resolve_expression(arg, interpreter);
+                for ref mut arg in arguments {
+                    self.resolve_expression(arg);
                 }
             }
-            Expr::Grouping(ref expr) => {
-                self.resolve_expression(expr, interpreter);
+            Expr::Grouping(ref mut expr) => {
+                self.resolve_expression(expr);
             }
             Expr::Literal(_) => {}
-            Expr::Logical(ref left, _, ref right) => {
-                self.resolve_expression(left, interpreter);
-                self.resolve_expression(right, interpreter);
+            Expr::Logical(ref mut left, _, ref mut right) => {
+                self.resolve_expression(left);
+                self.resolve_expression(right);
             }
-            Expr::Unary(_, ref expr) => {
-                self.resolve_expression(expr, interpreter);
+            Expr::Unary(_, ref mut expr) => {
+                self.resolve_expression(expr);
             }
         }
     }
 
-    fn resolve_local(&self, expr: &Expr, token: &Token, interpreter: &mut Interpreter) {
+    fn resolve_local(&self, lexeme: String) -> Option<usize> {
         for (i, scope) in self.scopes.iter().rev().enumerate() {
-            if scope.contains_key(&token.lexeme) {
-                interpreter.resolve(expr, i);
-                break;
+            if scope.contains_key(&lexeme) {
+                return Some(i);
             }
         }
+
+        None
     }
 
-    fn resolve_function(&mut self,
-                        params: &Vec<Token>,
-                        body: &Stmt,
-                        interpreter: &mut Interpreter) {
+    fn resolve_function(&mut self, params: &Vec<Token>, body: &mut Stmt) {
         self.begin_scope();
 
         for param in params {
@@ -119,7 +116,7 @@ impl Resolver {
             self.define(param.lexeme.clone());
         }
 
-        self.resolve_statement(body, interpreter);
+        self.resolve_statement(body);
         self.end_scope();
     }
 

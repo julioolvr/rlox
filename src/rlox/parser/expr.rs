@@ -1,5 +1,5 @@
 use std;
-use rlox::token::{Token, Literal};
+use rlox::token::{Literal, Token};
 
 #[derive(Debug, Clone)]
 pub enum Expr {
@@ -7,8 +7,8 @@ pub enum Expr {
     Grouping(Box<Expr>),
     Literal(Literal),
     Unary(Token, Box<Expr>),
-    Var(Token),
-    Assign(Token, Box<Expr>),
+    Var(Token, Option<usize>),
+    Assign(Token, Box<Expr>, Option<usize>),
     Logical(Box<Expr>, Token, Box<Expr>),
     Call(Box<Expr>, Vec<Expr>, Token),
 }
@@ -22,8 +22,8 @@ impl std::fmt::Display for Expr {
             Expr::Grouping(ref expr) => write!(f, "(group {})", expr),
             Expr::Literal(ref literal) => write!(f, "{}", literal),
             Expr::Unary(ref operator, ref expr) => write!(f, "({} {})", operator.lexeme, expr),
-            Expr::Var(ref token) => write!(f, "(var {})", token.lexeme),
-            Expr::Assign(ref token, ref expr) => write!(f, "(assign {} {})", token.lexeme, expr),
+            Expr::Var(ref token, _) => write!(f, "(var {})", token.lexeme),
+            Expr::Assign(ref token, ref expr, _) => write!(f, "(assign {} {})", token.lexeme, expr),
             Expr::Logical(ref left, ref operator, ref right) => {
                 write!(f, "({} {} {})", operator.lexeme, left, right)
             }

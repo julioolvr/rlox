@@ -47,22 +47,62 @@ impl Environment {
             self.values.insert(key.clone(), val);
             Ok(())
         } else {
-            match self.enclosing {
-                Some(ref mut parent) => parent.borrow_mut().assign(key, val),
-                None => Err(EnvironmentError::UndefinedVariable(key.clone())),
-            }
+            Err(EnvironmentError::UndefinedVariable(key.clone()))
+        }
+    }
+
+    pub fn assign_at(&mut self,
+                     key: &String,
+                     val: LoxValue,
+                     distance: usize)
+                     -> Result<(), EnvironmentError> {
+        if distance == 0 {
+            return self.assign(key, val);
+        }
+
+        let mut parent_env = self.ancestor(distance);
+
+        match parent_env {
+            Some(ref mut parent) => parent.borrow_mut().assign(key, val),
+            None => Err(EnvironmentError::UndefinedVariable(key.clone())),
         }
     }
 
     pub fn get(&self, key: &String) -> Result<LoxValue, EnvironmentError> {
         match self.values.get(key) {
             Some(value) => Ok(value.clone()),
-            None => {
-                match self.enclosing {
-                    Some(ref parent) => parent.borrow().get(key),
-                    None => Err(EnvironmentError::UndefinedVariable(key.clone())),
-                }
-            }
+            None => Err(EnvironmentError::UndefinedVariable(key.clone())),
         }
+    }
+
+    pub fn get_at(&self, key: &String, distance: usize) -> Result<LoxValue, EnvironmentError> {
+        if distance == 0 {
+            return self.get(key);
+        }
+
+        let parent_env = self.ancestor(distance);
+
+        match parent_env {
+            Some(parent_env) => parent_env.borrow().get(key),
+            None => Err(EnvironmentError::UndefinedVariable(key.clone())),
+        }
+    }
+
+    fn ancestor(&self, distance: usize) -> Option<Rc<RefCell<Environment>>> {
+        let mut ret_env = match self.enclosing {
+            Some(ref parent_env) => parent_env.clone(),
+            None => return None,
+        };
+
+        for _ in 1..distance {
+            let new_env = match ret_env.borrow().enclosing {
+                Some(ref parent_env) => parent_env.clone(),
+                None => return None,
+            };
+
+            ret_env = new_env;
+        }
+
+        Some(ret_env)
     }
 }

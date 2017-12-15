@@ -13,13 +13,17 @@ use rlox::callables::LoxFunc;
 
 pub struct Interpreter {
     env: Rc<RefCell<Environment>>,
+    globals: Rc<RefCell<Environment>>,
     writer: Rc<RefCell<io::Write>>,
 }
 
 impl Interpreter {
     pub fn new(writer: Rc<RefCell<io::Write>>) -> Interpreter {
+        let globals = Rc::new(RefCell::new(Environment::global()));
+
         Interpreter {
-            env: Rc::new(RefCell::new(Environment::global())),
+            env: globals.clone(),
+            globals: globals.clone(),
             writer,
         }
     }
@@ -32,10 +36,6 @@ impl Interpreter {
         }
 
         None
-    }
-
-    pub fn resolve(&self, expr: &Expr, distance: usize) {
-        unimplemented!()
     }
 
     fn interpret_stmt(&mut self, stmt: &Stmt) -> Result<Option<LoxValue>, RuntimeError> {
@@ -244,20 +244,42 @@ impl Interpreter {
                     }
                 }
             }
-            Expr::Var(ref token) => {
-                match self.env.borrow().get(&token.lexeme) {
-                    Ok(value) => Ok(value.clone()),
-                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+            Expr::Var(ref token, ref distance) => {
+                match distance {
+                    &Some(distance) => {
+                        match self.env.borrow().get_at(&token.lexeme, distance) {
+                            Ok(value) => Ok(value.clone()),
+                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                        }
+                    }
+                    &None => {
+                        match self.globals.borrow().get(&token.lexeme) {
+                            Ok(value) => Ok(value.clone()),
+                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                        }
+                    }
                 }
             }
-            Expr::Assign(ref token, ref expr) => {
+            Expr::Assign(ref token, ref expr, ref distance) => {
                 let value = self.interpret_expr(expr)?;
 
-                match self.env
-                          .borrow_mut()
-                          .assign(&token.lexeme, value.clone()) {
-                    Ok(_) => Ok(value),
-                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                match distance {
+                    &Some(distance) => {
+                        match self.env
+                                  .borrow_mut()
+                                  .assign_at(&token.lexeme, value.clone(), distance) {
+                            Ok(()) => Ok(value.clone()),
+                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                        }
+                    }
+                    &None => {
+                        match self.globals
+                                  .borrow_mut()
+                                  .assign(&token.lexeme, value.clone()) {
+                            Ok(()) => Ok(value.clone()),
+                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                        }
+                    }
                 }
             }
             Expr::Logical(ref left, ref operator, ref right) => {

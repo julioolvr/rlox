@@ -1,4 +1,4 @@
-use rlox::token::{Token, TokenType, Literal};
+use rlox::token::{Literal, Token, TokenType};
 use rlox::parser::errors::ParsingError;
 use rlox::parser::{Expr, Stmt};
 
@@ -247,8 +247,8 @@ impl TokenParser {
             let value = self.assignment()?;
 
             match expr {
-                Expr::Var(token) => {
-                    return Ok(Expr::Assign(token, Box::new(value)));
+                Expr::Var(token, _) => {
+                    return Ok(Expr::Assign(token, Box::new(value), None));
                 }
                 _ => return Err(ParsingError::InvalidAssignmentError(token)),
             }
@@ -380,7 +380,6 @@ impl TokenParser {
                              TokenType::False,
                              TokenType::True,
                              TokenType::Nil]) {
-
             return match self.previous().literal {
                        Some(ref literal) => Ok(Expr::Literal(literal.clone())),
                        None => {
@@ -390,7 +389,7 @@ impl TokenParser {
         }
 
         if self.next_is(vec![TokenType::Identifier]) {
-            return Ok(Expr::Var(self.previous().clone()));
+            return Ok(Expr::Var(self.previous().clone(), None));
         }
 
         if self.next_is(vec![TokenType::LeftParen]) {
@@ -409,7 +408,6 @@ impl TokenParser {
             Err(ParsingError::UnexpectedTokenError(self.peek().clone(),
                                                    "Unexpected token".to_string()))
         }
-
     }
 
     // Infrastructure
