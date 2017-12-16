@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::hash_map::HashMap;
 
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
@@ -14,11 +15,12 @@ pub struct LoxClass {
 #[derive(Debug)]
 pub struct LoxClassInternal {
     pub name: String,
+    pub methods: HashMap<String, LoxValue>,
 }
 
 impl LoxClass {
-    pub fn new(name: String) -> LoxClass {
-        LoxClass { internal: Rc::new(LoxClassInternal { name }) }
+    pub fn new(name: String, methods: HashMap<String, LoxValue>) -> LoxClass {
+        LoxClass { internal: Rc::new(LoxClassInternal { name, methods }) }
     }
 
     pub fn instantiate(&self) -> Result<LoxInstance, RuntimeError> {

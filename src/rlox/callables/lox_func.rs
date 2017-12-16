@@ -8,17 +8,23 @@ use rlox::environment::Environment;
 use rlox::interpreter::errors::RuntimeError;
 use rlox::lox_value::LoxValue;
 
+// TODO: move this outside of rlox::callables
 #[derive(Debug)]
 pub struct LoxFunc {
     declaration: Stmt,
-    closure: Rc<RefCell<Environment>>
+    closure: Rc<RefCell<Environment>>,
 }
 
 impl LoxFunc {
     pub fn new(stmt: Stmt, closure: Rc<RefCell<Environment>>) -> LoxFunc {
         // TODO: Would be great to have a compile-time check for this instead of panicking
         match stmt {
-            Stmt::Func(_, _, _) => LoxFunc { declaration: stmt, closure },
+            Stmt::Func(_, _, _) => {
+                LoxFunc {
+                    declaration: stmt,
+                    closure,
+                }
+            }
             _ => panic!("Cannot build a LoxFunc with a Stmt other than Stmt::Func"),
         }
     }
@@ -58,7 +64,7 @@ impl Callable for LoxFunc {
 
         match interpreter.interpret_block(body, RefCell::new(env))? {
             Some(result) => Ok(result),
-            None => Ok(LoxValue::Nil)
+            None => Ok(LoxValue::Nil),
         }
     }
 }

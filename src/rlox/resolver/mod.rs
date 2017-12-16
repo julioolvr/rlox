@@ -53,8 +53,21 @@ impl Resolver {
                 self.resolve_expression(condition);
                 self.resolve_statement(body);
             }
-            Stmt::Class(ref token, _) => {
+            Stmt::Class(ref token, ref mut methods) => {
                 self.declare(token.lexeme.clone());
+
+                for method in methods {
+                    match method {
+                        &mut Stmt::Func(ref token, ref params, ref mut body) => {
+                            self.declare(token.lexeme.clone());
+                            self.define(token.lexeme.clone());
+
+                            self.resolve_function(params, body);
+                        }
+                        _ => {}
+                    }
+                }
+
                 self.define(token.lexeme.clone());
             }
         }

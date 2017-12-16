@@ -3,6 +3,7 @@ pub mod errors;
 use std::io;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::hash_map::HashMap;
 
 use self::errors::RuntimeError;
 use rlox::lox_value::{LoxValue, LoxClass, ValueError};
@@ -116,8 +117,22 @@ impl Interpreter {
                 Ok(None)
             }
             Stmt::Return(_, ref expr) => Ok(Some(self.interpret_expr(expr)?)),
-            Stmt::Class(ref token, _) => {
-                let class = LoxValue::Class(Rc::new(LoxClass::new(token.lexeme.clone())));
+            Stmt::Class(ref token, ref method_statements) => {
+                let mut methods = HashMap::new();
+
+                for method_statement in method_statements {
+                    match method_statement {
+                        &Stmt::Func(ref name, _, _) => {
+                            let method = LoxValue::Func(Rc::new(LoxFunc::new(method_statement
+                                                                                 .clone(),
+                                                                             self.env.clone())));
+                            methods.insert(name.lexeme.clone(), method);
+                        }
+                        _ => return Err(RuntimeError::InternalError("TODO: Change me".to_string())),
+                    };
+                }
+
+                let class = LoxValue::Class(Rc::new(LoxClass::new(token.lexeme.clone(), methods)));
                 self.env
                     .borrow_mut()
                     .define(token.lexeme.clone(), class);

@@ -1,5 +1,5 @@
-use std::collections::hash_map::HashMap;
 use std::rc::Rc;
+use std::collections::hash_map::HashMap;
 
 use rlox::interpreter::errors::RuntimeError;
 use rlox::lox_value::LoxValue;
@@ -22,6 +22,7 @@ impl LoxInstance {
     pub fn get(&self, name: &str) -> Result<&LoxValue, RuntimeError> {
         self.state
             .get(name)
+            .or_else(|| self.class.methods.get(name))
             .ok_or(RuntimeError::UndefinedProperty(name.to_string()))
     }
 

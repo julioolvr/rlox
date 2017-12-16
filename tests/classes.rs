@@ -63,3 +63,19 @@ fn set_property_in_instance() {
 
     assert_eq!(output[0], "42");
 }
+
+#[test]
+fn call_method_on_instance() {
+    let output = utils::execute(r#"
+        class DeepThought {
+            getAnswer() {
+                return 42;
+            }
+        }
+
+        var instance = DeepThought();
+        print instance.getAnswer();
+    "#);
+
+    assert_eq!(output[0], "42");
+}
