@@ -175,3 +175,20 @@ fn using_this_in_non_method_fails() {
     "#,
     );
 }
+
+#[test]
+fn instance_initializer() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            init() {
+                this.answer = 42;
+            }
+        }
+
+        print DeepThought().answer;
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
