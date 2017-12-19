@@ -323,19 +323,16 @@ impl Interpreter {
 
                 Ok(value)
             }
-            Expr::This(ref token, ref distance) => {
-                println!("Interpreting Expr::This {:?} {:?}", token, distance);
-                match distance {
-                    &Some(distance) => match self.env.borrow().get_at(&token.lexeme, distance) {
-                        Ok(value) => Ok(value.clone()),
-                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                    },
-                    &None => match self.globals.borrow().get(&token.lexeme) {
-                        Ok(value) => Ok(value.clone()),
-                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                    },
-                }
-            }
+            Expr::This(ref token, ref distance) => match distance {
+                &Some(distance) => match self.env.borrow().get_at(&token.lexeme, distance) {
+                    Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                },
+                &None => match self.globals.borrow().get(&token.lexeme) {
+                    Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                },
+            },
         }
     }
 }

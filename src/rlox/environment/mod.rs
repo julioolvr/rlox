@@ -92,16 +92,10 @@ impl Environment {
     }
 
     fn ancestor(&self, distance: usize) -> Option<Rc<RefCell<Environment>>> {
-        println!("Looking for ancestor {}", distance);
         let mut ret_env = match self.enclosing {
             Some(ref parent_env) => parent_env.clone(),
             None => return None,
         };
-
-        println!(
-            "ret_env {:?}",
-            ret_env.borrow().values.keys()
-        );
 
         for _ in 1..distance {
             let new_env = match ret_env.borrow().enclosing {
@@ -110,8 +104,6 @@ impl Environment {
             };
 
             ret_env = new_env;
-
-            // println!("ret_env {:?}", ret_env.borrow().values);
         }
 
         Some(ret_env)

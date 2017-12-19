@@ -3,13 +3,23 @@ use rlox::parser::Expr;
 use rlox::token::Token;
 use std::collections::hash_map::HashMap;
 
+#[derive(Clone, PartialEq)]
+enum ClassType {
+    None,
+    Class,
+}
+
 pub struct Resolver {
     scopes: Vec<HashMap<String, bool>>,
+    class_type: ClassType,
 }
 
 impl Resolver {
     pub fn new() -> Resolver {
-        Resolver { scopes: Vec::new() }
+        Resolver {
+            scopes: Vec::new(),
+            class_type: ClassType::None,
+        }
     }
 
     pub fn resolve_ast(&mut self, ast: &mut Vec<Stmt>) {
@@ -55,6 +65,8 @@ impl Resolver {
             }
             Stmt::Class(ref token, ref mut methods) => {
                 self.declare(token.lexeme.clone());
+                let enclosing_class_type = self.class_type.clone();
+                self.class_type = ClassType::Class;
 
                 for method in methods {
                     match method {
@@ -68,6 +80,7 @@ impl Resolver {
                     }
                 }
 
+                self.class_type = enclosing_class_type;
                 self.define(token.lexeme.clone());
             }
         }
@@ -120,20 +133,19 @@ impl Resolver {
                 self.resolve_expression(value);
             }
             Expr::This(ref token, ref mut distance) => {
-                println!("Resolving Expr::This, {:?}, {:?}", token, distance);
+                if self.class_type == ClassType::None {
+                    panic!("UnexpectedTokenError: Cannot use `this` outside of a method.");
+                }
 
                 if let Some(scope) = self.scopes.last() {
                     if let Some(is_var_available) = scope.get(&token.lexeme) {
                         if !is_var_available {
-                            println!("Error, this not available");
                             // TODO: Error
                         }
                     }
                 }
 
-                let resolved_distance = self.resolve_local(token.lexeme.clone());
-                println!("Resolved distance for `this` {:?}", resolved_distance);
-                *distance = resolved_distance;
+                *distance = self.resolve_local(token.lexeme.clone());
             }
         }
     }
@@ -209,7 +221,6 @@ impl Resolver {
 
     fn define(&mut self, name: String) {
         if let Some(scope) = self.scopes.last_mut() {
-            println!("Defining variable in resolver {}", name);
             scope.insert(name, true);
         }
     }

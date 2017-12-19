@@ -153,3 +153,25 @@ fn callback_with_bound_this() {
 
     assert_eq!(output[0], "42");
 }
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `this` outside of a method.")]
+fn using_this_in_root_fails() {
+    utils::execute(
+        r#"
+        print this;
+    "#,
+    );
+}
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `this` outside of a method.")]
+fn using_this_in_non_method_fails() {
+    utils::execute(
+        r#"
+        fun thisShouldFail() {
+            print this;
+        }
+    "#,
+    );
+}
