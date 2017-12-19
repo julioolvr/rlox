@@ -1,0 +1,18 @@
+class Parent {
+  sum(a, b) {
+    return a + b;
+  }
+}
+
+class Child < Parent {
+  init(n) {
+    this.n = n;
+  }
+
+  sumN(a) {
+    return super.sum(a, this.n);
+  }
+}
+
+var child = Child(3);
+print child.sumN(2);

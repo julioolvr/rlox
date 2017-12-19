@@ -1,0 +1,13 @@
+fun getAnswerer(answer) {
+  fun getAnswer() {
+    return answer;
+  }
+
+  return getAnswer;
+}
+
+fun printer(fn) {
+  print fn();
+}
+
+printer(getAnswerer(42));
