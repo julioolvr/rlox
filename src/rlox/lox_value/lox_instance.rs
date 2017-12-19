@@ -3,7 +3,6 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 
 use rlox::interpreter::errors::RuntimeError;
-use rlox::callables::LoxFunc;
 use rlox::lox_value::LoxValue;
 use rlox::lox_value::lox_class::LoxClassInternal;
 
@@ -27,19 +26,8 @@ impl LoxInstance {
             .map(|property| property.clone())
             .or_else(|| {
                 self.class
-                    .methods
-                    .get(name)
-                    .map(|method| method.clone())
-                    .map(|method| match method {
-                        LoxValue::Func(ref callable) => LoxValue::Func(Rc::new(
-                            callable
-                                .as_any()
-                                .downcast_ref::<LoxFunc>()
-                                .expect("Couldn't cast Callable to LoxFunc in LoxValue::Func")
-                                .bind(Rc::new(RefCell::new(self.clone()))),
-                        )),
-                        _ => panic!("Can't get non-func as method from an instance"),
-                    })
+                    .find_method(name, Rc::new(RefCell::new(self.clone())))
+                    .map(|method| LoxValue::Func(Rc::new(method)))
             })
             .ok_or(RuntimeError::UndefinedProperty(name.to_string()))
     }

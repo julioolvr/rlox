@@ -11,5 +11,5 @@ pub enum Stmt {
     While(Expr, Box<Stmt>),
     Func(Token, Vec<Token>, Box<Stmt>),
     Return(Token, Box<Expr>),
-    Class(Token, Vec<Stmt>),
+    Class(Token, Option<Expr>, Vec<Stmt>),
 }

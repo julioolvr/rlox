@@ -83,10 +83,14 @@ impl Resolver {
                 self.resolve_expression(condition);
                 self.resolve_statement(body);
             }
-            Stmt::Class(ref token, ref mut methods) => {
+            Stmt::Class(ref token, ref mut superclass, ref mut methods) => {
                 self.declare(token.lexeme.clone());
                 let enclosing_class_type = self.class_type.clone();
                 self.class_type = ClassType::Class;
+
+                if let &mut Some(ref mut superclass) = superclass {
+                    self.resolve_expression(superclass);
+                }
 
                 self.begin_scope();
                 self.define("this".to_string());

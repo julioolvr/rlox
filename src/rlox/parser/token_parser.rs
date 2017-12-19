@@ -53,6 +53,16 @@ impl TokenParser {
     fn class_declaration(&mut self) -> Result<Stmt, ParsingError> {
         let name = self.consume(TokenType::Identifier, "Expected class name".to_string())?;
 
+        let superclass = if self.next_is(vec![TokenType::Less]) {
+            self.consume(
+                TokenType::Identifier,
+                "Expected superclass name".to_string(),
+            )?;
+            Some(Expr::Var(self.previous().clone(), None))
+        } else {
+            None
+        };
+
         self.consume(
             TokenType::LeftBrace,
             format!("Expected `{{` before class body."),
@@ -68,7 +78,7 @@ impl TokenParser {
             format!("Expected `}}` after class body."),
         )?;
 
-        Ok(Stmt::Class(name, methods))
+        Ok(Stmt::Class(name, superclass, methods))
     }
 
     fn var_declaration(&mut self) -> Result<Stmt, ParsingError> {

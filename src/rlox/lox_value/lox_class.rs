@@ -17,13 +17,45 @@ pub struct LoxClass {
 #[derive(Debug)]
 pub struct LoxClassInternal {
     pub name: String,
+    pub superclass: Option<Rc<LoxClass>>,
     pub methods: HashMap<String, LoxValue>,
 }
 
+impl LoxClassInternal {
+    pub fn find_method(&self, name: &str, instance: Rc<RefCell<LoxInstance>>) -> Option<LoxFunc> {
+        self.methods
+            .get(name)
+            .map(|method| method.clone())
+            .map(|method| match method {
+                LoxValue::Func(ref callable) => callable
+                    .as_any()
+                    .downcast_ref::<LoxFunc>()
+                    .expect("Couldn't cast Callable to LoxFunc in LoxValue::Func")
+                    .bind(instance.clone()),
+                _ => panic!("Can't get non-func as method from an instance"),
+            })
+            .or_else(|| {
+                if let Some(superclass) = self.superclass.clone() {
+                    superclass.find_method(name, instance)
+                } else {
+                    None
+                }
+            })
+    }
+}
+
 impl LoxClass {
-    pub fn new(name: String, methods: HashMap<String, LoxValue>) -> LoxClass {
+    pub fn new(
+        name: String,
+        superclass: Option<Rc<LoxClass>>,
+        methods: HashMap<String, LoxValue>,
+    ) -> LoxClass {
         LoxClass {
-            internal: Rc::new(LoxClassInternal { name, methods }),
+            internal: Rc::new(LoxClassInternal {
+                name,
+                superclass,
+                methods,
+            }),
         }
     }
 
@@ -33,6 +65,10 @@ impl LoxClass {
 
     pub fn get_name(&self) -> &str {
         &self.internal.name
+    }
+
+    pub fn find_method(&self, name: &str, instance: Rc<RefCell<LoxInstance>>) -> Option<LoxFunc> {
+        self.internal.find_method(name, instance)
     }
 }
 
@@ -60,18 +96,9 @@ impl Callable for LoxClass {
     ) -> Result<LoxValue, RuntimeError> {
         let instance = Rc::new(RefCell::new(self.instantiate()?));
 
-        let initializer = self.internal.methods.get("init");
-        if let Some(init) = initializer {
-            match init.clone() {
-                LoxValue::Func(ref callable) => callable
-                    .as_any()
-                    .downcast_ref::<LoxFunc>()
-                    .expect("Couldn't cast Callable to LoxFunc in LoxValue::Func")
-                    .bind(instance.clone())
-                    .call(interpreter, arguments)?,
-                _ => panic!("Can't get non-func as method from an instance"),
-            };
-        }
+        if let Some(init) = self.internal.find_method("init", instance.clone()) {
+            init.call(interpreter, arguments)?;
+        };
 
         Ok(LoxValue::Instance(instance))
     }

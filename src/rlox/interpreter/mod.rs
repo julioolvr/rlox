@@ -112,7 +112,7 @@ impl Interpreter {
                 Ok(None)
             }
             Stmt::Return(_, ref expr) => Ok(Some(self.interpret_expr(expr)?)),
-            Stmt::Class(ref token, ref method_statements) => {
+            Stmt::Class(ref token, ref superclass, ref method_statements) => {
                 let mut methods = HashMap::new();
 
                 for method_statement in method_statements {
@@ -129,8 +129,23 @@ impl Interpreter {
                     };
                 }
 
-                let class = LoxValue::Class(Rc::new(LoxClass::new(token.lexeme.clone(), methods)));
+                let resolved_superclass = if let &Some(ref superclass) = superclass {
+                    match self.interpret_expr(superclass)? {
+                        LoxValue::Class(ref class) => Some(class.clone()),
+                        _ => return Err(RuntimeError::InvalidSuperclass(token.clone())),
+                    }
+                } else {
+                    None
+                };
+
+                let class = LoxValue::Class(Rc::new(LoxClass::new(
+                    token.lexeme.clone(),
+                    resolved_superclass,
+                    methods,
+                )));
+
                 self.env.borrow_mut().define(token.lexeme.clone(), class);
+
                 Ok(None)
             }
         }
