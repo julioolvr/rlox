@@ -5,13 +5,22 @@ use std::collections::hash_map::HashMap;
 
 #[derive(Clone, PartialEq)]
 enum ClassType {
-    None,
+    None, // TODO: Use Option instead
     Class,
+}
+
+#[derive(Clone, PartialEq)]
+enum FunctionType {
+    None, // TODO: Use Option instead
+    Function,
+    Method,
+    Initializer,
 }
 
 pub struct Resolver {
     scopes: Vec<HashMap<String, bool>>,
     class_type: ClassType,
+    function_type: FunctionType,
 }
 
 impl Resolver {
@@ -19,6 +28,7 @@ impl Resolver {
         Resolver {
             scopes: Vec::new(),
             class_type: ClassType::None,
+            function_type: FunctionType::None,
         }
     }
 
@@ -46,7 +56,7 @@ impl Resolver {
                 self.declare(token.lexeme.clone());
                 self.define(token.lexeme.clone());
 
-                self.resolve_function(params, body);
+                self.resolve_function(params, body, FunctionType::Function);
             }
             Stmt::Expr(ref mut expr) => self.resolve_expression(expr),
             Stmt::If(ref mut condition, ref mut then_branch, ref mut else_branch) => {
@@ -58,7 +68,12 @@ impl Resolver {
                 }
             }
             Stmt::Print(ref mut expr) => self.resolve_expression(expr),
-            Stmt::Return(_, ref mut expr) => self.resolve_expression(expr),
+            Stmt::Return(_, ref mut expr) => {
+                if self.function_type == FunctionType::Initializer {
+                    panic!("UnexpectedTokenError: Cannot use `return` on an initializer.");
+                }
+                self.resolve_expression(expr)
+            }
             Stmt::While(ref mut condition, ref mut body) => {
                 self.resolve_expression(condition);
                 self.resolve_statement(body);
@@ -77,7 +92,13 @@ impl Resolver {
                             self.declare(token.lexeme.clone());
                             self.define(token.lexeme.clone());
 
-                            self.resolve_function(params, body);
+                            let function_type = if token.lexeme == "init" {
+                                FunctionType::Initializer
+                            } else {
+                                FunctionType::Method
+                            };
+
+                            self.resolve_function(params, body, function_type);
                         }
                         _ => {}
                     }
@@ -165,7 +186,14 @@ impl Resolver {
         None
     }
 
-    fn resolve_function(&mut self, params: &Vec<Token>, body: &mut Stmt) {
+    fn resolve_function(
+        &mut self,
+        params: &Vec<Token>,
+        body: &mut Stmt,
+        function_type: FunctionType,
+    ) {
+        let enclosing_function = self.function_type.clone();
+        self.function_type = function_type;
         self.begin_scope();
 
         for param in params {
@@ -181,6 +209,7 @@ impl Resolver {
         }
 
         self.end_scope();
+        self.function_type = enclosing_function;
     }
 
     fn begin_scope(&mut self) {

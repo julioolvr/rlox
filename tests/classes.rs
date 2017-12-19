@@ -226,3 +226,17 @@ fn calling_init_returns_the_same_instance() {
 
     assert_eq!(output[0], "42");
 }
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `return` on an initializer.")]
+fn return_from_init_throws_an_error() {
+    utils::execute(
+        r#"
+        class DeepThought {
+            init() {
+                return 42;
+            }
+        }
+    "#,
+    );
+}
