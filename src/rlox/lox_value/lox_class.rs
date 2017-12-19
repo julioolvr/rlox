@@ -40,8 +40,17 @@ impl Callable for LoxClass {
     fn as_any(&self) -> &Any {
         self
     }
+
     fn arity(&self) -> usize {
-        0
+        let initializer = self.internal.methods.get("init");
+        if let Some(init) = initializer {
+            match init {
+                &LoxValue::Func(ref callable) => callable.arity(),
+                _ => panic!("Can't get non-func as method from an instance"),
+            }
+        } else {
+            0
+        }
     }
 
     fn call(

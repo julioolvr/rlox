@@ -129,9 +129,7 @@ fn detached_this() {
     assert_eq!(output[0], "42");
 }
 
-// Ignored until I fix the bug shown on closures#simple_closure
 #[test]
-#[ignore]
 fn callback_with_bound_this() {
     let output = utils::execute(
         r#"
@@ -187,6 +185,23 @@ fn instance_initializer() {
         }
 
         print DeepThought().answer;
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
+
+#[test]
+fn initializer_with_parameters() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            init(answer) {
+                this.answer = answer;
+            }
+        }
+
+        print DeepThought(42).answer;
     "#,
     );
 

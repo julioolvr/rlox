@@ -2,7 +2,6 @@ extern crate rlox;
 mod utils;
 
 #[test]
-#[ignore]
 fn simple_closure() {
     let output = utils::execute(
         r#"
