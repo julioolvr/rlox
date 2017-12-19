@@ -106,7 +106,8 @@ impl Interpreter {
                 Ok(None)
             }
             Stmt::Func(ref name, _, _) => {
-                let func = LoxValue::Func(Rc::new(LoxFunc::new(stmt.clone(), self.env.clone())));
+                let func =
+                    LoxValue::Func(Rc::new(LoxFunc::new(stmt.clone(), self.env.clone(), false)));
                 self.env.borrow_mut().define(name.lexeme.clone(), func);
                 Ok(None)
             }
@@ -120,6 +121,7 @@ impl Interpreter {
                             let method = LoxValue::Func(Rc::new(LoxFunc::new(
                                 method_statement.clone(),
                                 self.env.clone(),
+                                name.lexeme == "init",
                             )));
                             methods.insert(name.lexeme.clone(), method);
                         }

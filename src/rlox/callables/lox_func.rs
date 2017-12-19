@@ -14,15 +14,17 @@ use rlox::lox_value::{LoxInstance, LoxValue};
 pub struct LoxFunc {
     declaration: Stmt,
     closure: Rc<RefCell<Environment>>,
+    is_initializer: bool,
 }
 
 impl LoxFunc {
-    pub fn new(stmt: Stmt, closure: Rc<RefCell<Environment>>) -> LoxFunc {
+    pub fn new(stmt: Stmt, closure: Rc<RefCell<Environment>>, is_initializer: bool) -> LoxFunc {
         // TODO: Would be great to have a compile-time check for this instead of panicking
         match stmt {
             Stmt::Func(_, _, _) => LoxFunc {
                 declaration: stmt,
                 closure,
+                is_initializer,
             },
             _ => panic!("Cannot build a LoxFunc with a Stmt other than Stmt::Func"),
         }
@@ -35,6 +37,7 @@ impl LoxFunc {
         LoxFunc {
             declaration: self.declaration.clone(),
             closure: Rc::new(RefCell::new(env)),
+            is_initializer: self.is_initializer,
         }
     }
 }
@@ -77,9 +80,18 @@ impl Callable for LoxFunc {
             );
         }
 
-        match interpreter.interpret_block(body, RefCell::new(env))? {
+        let result = match interpreter.interpret_block(body, RefCell::new(env))? {
             Some(result) => Ok(result),
             None => Ok(LoxValue::Nil),
+        };
+
+        if self.is_initializer {
+            return Ok(self.closure
+                .borrow()
+                .get_at(&"this".to_string(), 0)
+                .expect("Couldn't find reference to `this` in initializer"));
         }
+
+        return result;
     }
 }

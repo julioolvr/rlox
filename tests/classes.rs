@@ -207,3 +207,22 @@ fn initializer_with_parameters() {
 
     assert_eq!(output[0], "42");
 }
+
+#[test]
+fn calling_init_returns_the_same_instance() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            init() {
+                this.answer = 42;
+            }
+        }
+
+        var instance = DeepThought();
+        instance.answer = 43;
+        print instance.init().answer;
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
