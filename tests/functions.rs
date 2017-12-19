@@ -16,3 +16,9 @@ fn function_parameters() {
 
     assert_eq!(output[0], "3");
 }
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `return` at the top level.")]
+fn return_on_top_level() {
+    execute("return 42;");
+}

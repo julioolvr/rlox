@@ -72,6 +72,11 @@ impl Resolver {
                 if self.function_type == FunctionType::Initializer {
                     panic!("UnexpectedTokenError: Cannot use `return` on an initializer.");
                 }
+
+                if self.function_type == FunctionType::None {
+                    panic!("UnexpectedTokenError: Cannot use `return` at the top level.");
+                }
+
                 self.resolve_expression(expr)
             }
             Stmt::While(ref mut condition, ref mut body) => {
