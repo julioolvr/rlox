@@ -7,6 +7,7 @@ use std::collections::hash_map::HashMap;
 enum ClassType {
     None, // TODO: Use Option instead
     Class,
+    SubClass,
 }
 
 #[derive(Clone, PartialEq)]
@@ -89,6 +90,7 @@ impl Resolver {
                 self.class_type = ClassType::Class;
 
                 if let &mut Some(ref mut superclass) = superclass {
+                    self.class_type = ClassType::SubClass;
                     self.resolve_expression(superclass);
                     self.begin_scope();
                     self.define("super".to_string());
@@ -189,6 +191,14 @@ impl Resolver {
                 *distance = self.resolve_local(token.lexeme.clone());
             }
             Expr::Super(ref token, _, ref mut distance) => {
+                if self.class_type == ClassType::None {
+                    panic!("UnexpectedTokenError: Cannot use `super` outside of a method.");
+                }
+
+                if self.class_type == ClassType::Class {
+                    panic!("UnexpectedTokenError: Cannot use `super` without a superclass.");
+                }
+
                 if let Some(scope) = self.scopes.last() {
                     if let Some(is_var_available) = scope.get(&token.lexeme) {
                         if !is_var_available {

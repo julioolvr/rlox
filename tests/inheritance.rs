@@ -87,3 +87,23 @@ fn referencing_super_without_access_fails() {
 
     assert!(output[0].contains("Expect '.' after 'super'."));
 }
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `super` outside of a method.")]
+fn using_super_outside_of_method_fails() {
+    execute("super.doSomething();");
+}
+
+#[test]
+#[should_panic(expected = "UnexpectedTokenError: Cannot use `super` without a superclass.")]
+fn using_super_without_superclass_fails() {
+    execute(
+        r#"
+        class Something {
+            getValue() {
+                return super.getValue();
+            }
+        }
+    "#,
+    );
+}
