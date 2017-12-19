@@ -26,3 +26,64 @@ fn can_call_superclass_method() {
 
     assert_eq!(output[0], "42");
 }
+
+#[test]
+fn overriding_methods() {
+    let output = execute(
+        r#"
+        class Parent {
+            getValue() {
+                return 1;
+            }
+        }
+
+        class Child {
+            getValue() {
+                return 2;
+            }
+        }
+
+        print Child().getValue();
+    "#,
+    );
+
+    assert_eq!(output[0], "2");
+}
+
+#[test]
+fn using_super() {
+    let output = execute(
+        r#"
+        class Parent {
+            getValue() {
+                return 1;
+            }
+        }
+
+        class Child < Parent {
+            getValue() {
+                return super.getValue() + 2;
+            }
+        }
+
+        print Child().getValue();
+    "#,
+    );
+
+    assert_eq!(output[0], "3");
+}
+
+#[test]
+fn referencing_super_without_access_fails() {
+    let output = execute(
+        r#"
+        class Something {
+            getValue() {
+                return super;
+            }
+        }
+    "#,
+    );
+
+    assert!(output[0].contains("Expect '.' after 'super'."));
+}

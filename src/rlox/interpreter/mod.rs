@@ -114,6 +114,23 @@ impl Interpreter {
             Stmt::Return(_, ref expr) => Ok(Some(self.interpret_expr(expr)?)),
             Stmt::Class(ref token, ref superclass, ref method_statements) => {
                 let mut methods = HashMap::new();
+                let mut parent_env = None;
+
+                let resolved_superclass = if let &Some(ref superclass) = superclass {
+                    let superclass = match self.interpret_expr(superclass)? {
+                        LoxValue::Class(ref class) => class.clone(),
+                        _ => return Err(RuntimeError::InvalidSuperclass(token.clone())),
+                    };
+
+                    parent_env = Some(self.env.clone());
+                    let mut env = Environment::from_parent(self.env.clone());
+                    env.define("super".to_string(), LoxValue::Class(superclass.clone()));
+                    self.env = Rc::new(RefCell::new(env));
+
+                    Some(superclass)
+                } else {
+                    None
+                };
 
                 for method_statement in method_statements {
                     match method_statement {
@@ -129,20 +146,15 @@ impl Interpreter {
                     };
                 }
 
-                let resolved_superclass = if let &Some(ref superclass) = superclass {
-                    match self.interpret_expr(superclass)? {
-                        LoxValue::Class(ref class) => Some(class.clone()),
-                        _ => return Err(RuntimeError::InvalidSuperclass(token.clone())),
-                    }
-                } else {
-                    None
-                };
-
                 let class = LoxValue::Class(Rc::new(LoxClass::new(
                     token.lexeme.clone(),
                     resolved_superclass,
                     methods,
                 )));
+
+                if superclass.is_some() {
+                    self.env = parent_env.expect("When interpreting a subclass, a parent environment should always be present");
+                }
 
                 self.env.borrow_mut().define(token.lexeme.clone(), class);
 
@@ -349,6 +361,46 @@ impl Interpreter {
                     Ok(value) => Ok(value.clone()),
                     Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
                 },
+            },
+            Expr::Super(_, ref method, ref distance) => match distance {
+                &Some(distance) => {
+                    let superclass = self.env
+                        .borrow()
+                        .get_at(&"super".to_string(), distance)
+                        .expect("Couldn't find `super` when interpreting");
+                    let instance = self.env
+                        .borrow()
+                        .get_at(&"this".to_string(), distance - 1)
+                        .expect("Couldn't find `this` when interpreting `super` call");
+
+                    let superclass = match superclass {
+                        LoxValue::Class(ref class) => class,
+                        _ => {
+                            return Err(RuntimeError::InternalError(
+                                "Couldn't extract LoxClass from LoxValue::Class".to_string(),
+                            ))
+                        }
+                    };
+
+                    let instance = match instance {
+                        LoxValue::Instance(ref instance) => instance,
+                        _ => {
+                            return Err(RuntimeError::InternalError(
+                                "Couldn't extract LoxInstance from LoxValue::Instance".to_string(),
+                            ))
+                        }
+                    };
+
+                    let resolved_method = superclass.find_method(&method.lexeme, instance.clone());
+
+                    match resolved_method {
+                        Some(method) => Ok(LoxValue::Func(Rc::new(method))),
+                        None => Err(RuntimeError::UndefinedProperty(method.lexeme.clone())),
+                    }
+                }
+                &None => Err(RuntimeError::InternalError(
+                    "Couldn't find distance to super reference".to_string(),
+                )),
             },
         }
     }

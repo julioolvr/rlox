@@ -11,7 +11,7 @@ use rlox::callables::native;
 #[derive(Debug)]
 pub struct Environment {
     values: HashMap<String, LoxValue>,
-    enclosing: Option<Rc<RefCell<Environment>>>,
+    pub enclosing: Option<Rc<RefCell<Environment>>>,
 }
 
 impl Environment {

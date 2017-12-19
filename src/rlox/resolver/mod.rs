@@ -90,6 +90,8 @@ impl Resolver {
 
                 if let &mut Some(ref mut superclass) = superclass {
                     self.resolve_expression(superclass);
+                    self.begin_scope();
+                    self.define("super".to_string());
                 }
 
                 self.begin_scope();
@@ -114,6 +116,11 @@ impl Resolver {
                 }
 
                 self.end_scope();
+
+                if superclass.is_some() {
+                    self.end_scope();
+                }
+
                 self.class_type = enclosing_class_type;
                 self.define(token.lexeme.clone());
             }
@@ -181,13 +188,24 @@ impl Resolver {
 
                 *distance = self.resolve_local(token.lexeme.clone());
             }
+            Expr::Super(ref token, _, ref mut distance) => {
+                if let Some(scope) = self.scopes.last() {
+                    if let Some(is_var_available) = scope.get(&token.lexeme) {
+                        if !is_var_available {
+                            // TODO: Error
+                        }
+                    }
+                }
+
+                let resolved_distance = self.resolve_local(token.lexeme.clone());
+                *distance = resolved_distance;
+            }
         }
     }
 
     fn resolve_local(&self, lexeme: String) -> Option<usize> {
         for (i, scope) in self.scopes.iter().rev().enumerate() {
             if scope.contains_key(&lexeme) {
-                println!("Resolved local {} {}", lexeme, i);
                 return Some(i);
             }
         }
