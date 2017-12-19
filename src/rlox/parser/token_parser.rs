@@ -53,16 +53,20 @@ impl TokenParser {
     fn class_declaration(&mut self) -> Result<Stmt, ParsingError> {
         let name = self.consume(TokenType::Identifier, "Expected class name".to_string())?;
 
-        self.consume(TokenType::LeftBrace,
-                     format!("Expected `{{` before class body."))?;
+        self.consume(
+            TokenType::LeftBrace,
+            format!("Expected `{{` before class body."),
+        )?;
 
         let mut methods = Vec::new();
         while !self.check(TokenType::RightBrace) && !self.is_over() {
             methods.push(self.fun_declaration("method")?);
         }
 
-        self.consume(TokenType::RightBrace,
-                     format!("Expected `}}` after class body."))?;
+        self.consume(
+            TokenType::RightBrace,
+            format!("Expected `}}` after class body."),
+        )?;
 
         Ok(Stmt::Class(name, methods))
     }
@@ -76,21 +80,25 @@ impl TokenParser {
             Expr::Literal(Literal::Nil)
         };
 
-        self.consume(TokenType::Semicolon,
-                     "Expect ';' after variable declaration.".to_string())?;
+        self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after variable declaration.".to_string(),
+        )?;
         Ok(Stmt::Var(name, initial_value))
     }
 
     fn fun_declaration(&mut self, kind: &'static str) -> Result<Stmt, ParsingError> {
         let name = self.consume(TokenType::Identifier, format!("Expected {} name.", kind))?;
 
-        self.consume(TokenType::LeftParen,
-                     format!("Expected `(` after {} name.", kind))?;
+        self.consume(
+            TokenType::LeftParen,
+            format!("Expected `(` after {} name.", kind),
+        )?;
         let mut parameters: Vec<Token> = Vec::new();
 
         if !self.check(TokenType::RightParen) {
-            parameters.push(self.consume(TokenType::Identifier,
-                                         "Expected parameter name".to_string())?);
+            parameters
+                .push(self.consume(TokenType::Identifier, "Expected parameter name".to_string())?);
 
             while self.next_is(vec![TokenType::Comma]) {
                 if parameters.len() >= 8 {
@@ -99,16 +107,22 @@ impl TokenParser {
                     return Err(ParsingError::TooManyParametersError);
                 }
 
-                parameters.push(self.consume(TokenType::Identifier,
-                                             "Expected parameter name".to_string())?)
+                parameters.push(self.consume(
+                    TokenType::Identifier,
+                    "Expected parameter name".to_string(),
+                )?)
             }
         }
 
-        self.consume(TokenType::RightParen,
-                     "Expect `)` after parameters.".to_string())?;
+        self.consume(
+            TokenType::RightParen,
+            "Expect `)` after parameters.".to_string(),
+        )?;
 
-        self.consume(TokenType::LeftBrace,
-                     format!("Expected `{{` before {} body.", kind))?;
+        self.consume(
+            TokenType::LeftBrace,
+            format!("Expected `{{` before {} body.", kind),
+        )?;
 
         let body = self.block_statement()?;
 
@@ -136,8 +150,10 @@ impl TokenParser {
     fn expression_statement(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
 
-        match self.consume(TokenType::Semicolon,
-                           "Expect ';' after expression.".to_string()) {
+        match self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after expression.".to_string(),
+        ) {
             Ok(_) => Ok(Stmt::Expr(expr)),
             Err(err) => Err(err),
         }
@@ -150,8 +166,10 @@ impl TokenParser {
             statements.push(self.declaration()?);
         }
 
-        self.consume(TokenType::RightBrace,
-                     "Expected `}` after block".to_string())?;
+        self.consume(
+            TokenType::RightBrace,
+            "Expected `}` after block".to_string(),
+        )?;
 
         Ok(Stmt::Block(statements))
     }
@@ -159,8 +177,10 @@ impl TokenParser {
     fn if_statement(&mut self) -> Result<Stmt, ParsingError> {
         self.consume(TokenType::LeftParen, "Expected `(` after `if`".to_string())?;
         let condition = self.expression()?;
-        self.consume(TokenType::RightParen,
-                     "Expected `)` after condition".to_string())?;
+        self.consume(
+            TokenType::RightParen,
+            "Expected `)` after condition".to_string(),
+        )?;
 
         let then_branch = self.statement()?;
         let else_branch = if self.next_is(vec![TokenType::Else]) {
@@ -169,15 +189,23 @@ impl TokenParser {
             None
         };
 
-        Ok(Stmt::If(condition, Box::new(then_branch), Box::new(else_branch)))
+        Ok(Stmt::If(
+            condition,
+            Box::new(then_branch),
+            Box::new(else_branch),
+        ))
     }
 
     fn while_statement(&mut self) -> Result<Stmt, ParsingError> {
-        self.consume(TokenType::LeftParen,
-                     "Expected `(` after `while`".to_string())?;
+        self.consume(
+            TokenType::LeftParen,
+            "Expected `(` after `while`".to_string(),
+        )?;
         let condition = self.expression()?;
-        self.consume(TokenType::RightParen,
-                     "Expected `while` after condition".to_string())?;
+        self.consume(
+            TokenType::RightParen,
+            "Expected `while` after condition".to_string(),
+        )?;
 
         let body = self.statement()?;
 
@@ -199,8 +227,10 @@ impl TokenParser {
             None
         } else {
             let expr = Some(self.expression()?);
-            self.consume(TokenType::Semicolon,
-                         "Expect `;` after loop condition.".to_string())?;
+            self.consume(
+                TokenType::Semicolon,
+                "Expect `;` after loop condition.".to_string(),
+            )?;
             expr
         };
 
@@ -208,8 +238,10 @@ impl TokenParser {
             None
         } else {
             let expr = Some(self.expression()?);
-            self.consume(TokenType::RightParen,
-                         "Expect `)` after for clause.".to_string())?;
+            self.consume(
+                TokenType::RightParen,
+                "Expect `)` after for clause.".to_string(),
+            )?;
             expr
         };
 
@@ -238,8 +270,10 @@ impl TokenParser {
             Expr::Literal(Literal::Nil)
         };
 
-        self.consume(TokenType::Semicolon,
-                     "Expect `;` after return value.".to_string())?;
+        self.consume(
+            TokenType::Semicolon,
+            "Expect `;` after return value.".to_string(),
+        )?;
 
         Ok(Stmt::Return(keyword, Box::new(value)))
     }
@@ -247,8 +281,10 @@ impl TokenParser {
     fn print_statement(&mut self) -> Result<Stmt, ParsingError> {
         let expr = self.expression()?;
 
-        match self.consume(TokenType::Semicolon,
-                           "Expect ';' after expression.".to_string()) {
+        match self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after expression.".to_string(),
+        ) {
             Ok(_) => Ok(Stmt::Print(expr)),
             Err(err) => Err(err),
         }
@@ -316,10 +352,12 @@ impl TokenParser {
     fn comparison(&mut self) -> Result<Expr, ParsingError> {
         let mut expr = self.addition()?;
 
-        while self.next_is(vec![TokenType::Greater,
-                                TokenType::GreaterEqual,
-                                TokenType::Less,
-                                TokenType::LessEqual]) {
+        while self.next_is(vec![
+            TokenType::Greater,
+            TokenType::GreaterEqual,
+            TokenType::Less,
+            TokenType::LessEqual,
+        ]) {
             let operator = self.previous().clone();
             let right = self.addition()?;
             expr = Expr::Binary(Box::new(expr), operator, Box::new(right));
@@ -369,9 +407,10 @@ impl TokenParser {
             if self.next_is(vec![TokenType::LeftParen]) {
                 expr = self.finish_call(expr)?;
             } else if self.next_is(vec![TokenType::Dot]) {
-                let name =
-                    self.consume(TokenType::Identifier,
-                                 "Expected property name after `.`.".to_string())?;
+                let name = self.consume(
+                    TokenType::Identifier,
+                    "Expected property name after `.`.".to_string(),
+                )?;
                 expr = Expr::Get(Box::new(expr), name);
             } else {
                 break;
@@ -397,24 +436,32 @@ impl TokenParser {
             }
         }
 
-        let paren = self.consume(TokenType::RightParen,
-                                 "Expect `)` after arguments.".to_string())?;
+        let paren = self.consume(
+            TokenType::RightParen,
+            "Expect `)` after arguments.".to_string(),
+        )?;
 
         Ok(Expr::Call(Box::new(callee), arguments, paren))
     }
 
     fn primary(&mut self) -> Result<Expr, ParsingError> {
-        if self.next_is(vec![TokenType::Number,
-                             TokenType::String,
-                             TokenType::False,
-                             TokenType::True,
-                             TokenType::Nil]) {
+        if self.next_is(vec![
+            TokenType::Number,
+            TokenType::String,
+            TokenType::False,
+            TokenType::True,
+            TokenType::Nil,
+        ]) {
             return match self.previous().literal {
-                       Some(ref literal) => Ok(Expr::Literal(literal.clone())),
-                       None => {
-                           Err(ParsingError::InternalError("Missing literal value".to_string()))
-                       }
-                   };
+                Some(ref literal) => Ok(Expr::Literal(literal.clone())),
+                None => Err(ParsingError::InternalError(
+                    "Missing literal value".to_string(),
+                )),
+            };
+        }
+
+        if self.next_is(vec![TokenType::This]) {
+            return Ok(Expr::This(self.previous().clone(), None));
         }
 
         if self.next_is(vec![TokenType::Identifier]) {
@@ -424,8 +471,10 @@ impl TokenParser {
         if self.next_is(vec![TokenType::LeftParen]) {
             let expr = self.expression()?;
 
-            match self.consume(TokenType::RightParen,
-                               "Expected ')' after expression.".to_string()) {
+            match self.consume(
+                TokenType::RightParen,
+                "Expected ')' after expression.".to_string(),
+            ) {
                 Ok(_) => return Ok(Expr::Grouping(Box::new(expr))),
                 Err(err) => return Err(err),
             }
@@ -434,8 +483,10 @@ impl TokenParser {
         if self.is_over() {
             Err(ParsingError::UnexpectedEofError)
         } else {
-            Err(ParsingError::UnexpectedTokenError(self.peek().clone(),
-                                                   "Unexpected token".to_string()))
+            Err(ParsingError::UnexpectedTokenError(
+                self.peek().clone(),
+                "Unexpected token".to_string(),
+            ))
         }
     }
 
@@ -483,7 +534,10 @@ impl TokenParser {
         if self.check(token_type) {
             Ok(self.advance().clone())
         } else {
-            Err(ParsingError::UnexpectedTokenError(self.peek().clone(), message))
+            Err(ParsingError::UnexpectedTokenError(
+                self.peek().clone(),
+                message,
+            ))
         }
     }
 
@@ -496,8 +550,14 @@ impl TokenParser {
             }
 
             match self.peek().token_type {
-                TokenType::Class | TokenType::Fun | TokenType::Var | TokenType::For |
-                TokenType::If | TokenType::While | TokenType::Print | TokenType::Return => return,
+                TokenType::Class
+                | TokenType::Fun
+                | TokenType::Var
+                | TokenType::For
+                | TokenType::If
+                | TokenType::While
+                | TokenType::Print
+                | TokenType::Return => return,
                 _ => {}
             }
 

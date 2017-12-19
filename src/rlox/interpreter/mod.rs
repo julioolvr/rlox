@@ -6,7 +6,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 
 use self::errors::RuntimeError;
-use rlox::lox_value::{LoxValue, LoxClass, ValueError};
+use rlox::lox_value::{LoxClass, LoxValue, ValueError};
 use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
 use rlox::environment::Environment;
@@ -41,33 +41,27 @@ impl Interpreter {
 
     fn interpret_stmt(&mut self, stmt: &Stmt) -> Result<Option<LoxValue>, RuntimeError> {
         match *stmt {
-            Stmt::Print(ref expr) => {
-                match self.interpret_expr(expr) {
-                    Ok(val) => {
-                        self.writer
-                            .borrow_mut()
-                            .write_all(format!("{}\n", val).as_ref())
-                            .expect("Error writing to stdout/writer");
-                        Ok(None)
-                    }
-                    Err(err) => Err(err),
+            Stmt::Print(ref expr) => match self.interpret_expr(expr) {
+                Ok(val) => {
+                    self.writer
+                        .borrow_mut()
+                        .write_all(format!("{}\n", val).as_ref())
+                        .expect("Error writing to stdout/writer");
+                    Ok(None)
                 }
-            }
-            Stmt::Expr(ref expr) => {
-                match self.interpret_expr(expr) {
-                    Ok(_) => Ok(None),
-                    Err(err) => Err(err),
-                }
-            }
+                Err(err) => Err(err),
+            },
+            Stmt::Expr(ref expr) => match self.interpret_expr(expr) {
+                Ok(_) => Ok(None),
+                Err(err) => Err(err),
+            },
             Stmt::Var(ref token, ref expr) => {
                 let value = match self.interpret_expr(expr) {
                     Ok(value) => value,
                     Err(err) => return Err(err),
                 };
 
-                self.env
-                    .borrow_mut()
-                    .define(token.lexeme.clone(), value);
+                self.env.borrow_mut().define(token.lexeme.clone(), value);
 
                 Ok(None)
             }
@@ -123,9 +117,10 @@ impl Interpreter {
                 for method_statement in method_statements {
                     match method_statement {
                         &Stmt::Func(ref name, _, _) => {
-                            let method = LoxValue::Func(Rc::new(LoxFunc::new(method_statement
-                                                                                 .clone(),
-                                                                             self.env.clone())));
+                            let method = LoxValue::Func(Rc::new(LoxFunc::new(
+                                method_statement.clone(),
+                                self.env.clone(),
+                            )));
                             methods.insert(name.lexeme.clone(), method);
                         }
                         _ => return Err(RuntimeError::InternalError("TODO: Change me".to_string())),
@@ -133,18 +128,17 @@ impl Interpreter {
                 }
 
                 let class = LoxValue::Class(Rc::new(LoxClass::new(token.lexeme.clone(), methods)));
-                self.env
-                    .borrow_mut()
-                    .define(token.lexeme.clone(), class);
+                self.env.borrow_mut().define(token.lexeme.clone(), class);
                 Ok(None)
             }
         }
     }
 
-    pub fn interpret_block(&mut self,
-                           statements: &Vec<Stmt>,
-                           environment: RefCell<Environment>)
-                           -> Result<Option<LoxValue>, RuntimeError> {
+    pub fn interpret_block(
+        &mut self,
+        statements: &Vec<Stmt>,
+        environment: RefCell<Environment>,
+    ) -> Result<Option<LoxValue>, RuntimeError> {
         let mut return_value = None;
         let parent_env = self.env.clone();
         self.env = Rc::new(environment);
@@ -167,7 +161,9 @@ impl Interpreter {
                 if let Some(value) = literal.value() {
                     Ok(value)
                 } else {
-                    Err(RuntimeError::InternalError("Invalid literal - no value".to_string()))
+                    Err(RuntimeError::InternalError(
+                        "Invalid literal - no value".to_string(),
+                    ))
                 }
             }
             Expr::Grouping(ref expr) => self.interpret_expr(expr),
@@ -175,23 +171,16 @@ impl Interpreter {
                 let value = self.interpret_expr(expr)?;
 
                 match token.token_type {
-                    TokenType::Minus => {
-                        value
-                            .negate_number()
-                            .map_err(|_| RuntimeError::NegateNonNumberError(token.clone()))
-                    }
-                    TokenType::Bang => {
-                        value
-                            .negate()
-                            .map_err(|_| {
-                                         RuntimeError::InternalError("Can't negate value"
-                                                                         .to_string())
-                                     })
-                    }
-                    _ => {
-                        Err(RuntimeError::InternalError(format!("Invalid unary operator: {:?}",
-                                                                token)))
-                    }
+                    TokenType::Minus => value
+                        .negate_number()
+                        .map_err(|_| RuntimeError::NegateNonNumberError(token.clone())),
+                    TokenType::Bang => value
+                        .negate()
+                        .map_err(|_| RuntimeError::InternalError("Can't negate value".to_string())),
+                    _ => Err(RuntimeError::InternalError(format!(
+                        "Invalid unary operator: {:?}",
+                        token
+                    ))),
                 }
             }
             Expr::Binary(ref left, ref operator, ref right) => {
@@ -199,109 +188,74 @@ impl Interpreter {
                 let right_value = self.interpret_expr(right)?;
 
                 match operator.token_type {
-                    TokenType::Minus => {
-                        left_value
-                            .subtract(right_value)
-                            .map_err(|_| RuntimeError::SubtractNonNumbers(operator.clone()))
-                    }
-                    TokenType::Slash => {
-                        left_value
-                            .divide(right_value)
-                            .map_err(|err| match err {
-                                         ValueError::DivideByZero => {
-                                             RuntimeError::DivideByZeroError(operator.clone())
-                                         }
-                                         _ => RuntimeError::DivideNonNumbers(operator.clone()),
-                                     })
-                    }
-                    TokenType::Star => {
-                        left_value
-                            .multiply(right_value)
-                            .map_err(|_| RuntimeError::MultiplyNonNumbers(operator.clone()))
-                    }
-                    TokenType::Plus => {
-                        left_value
-                            .plus(right_value)
-                            .map_err(|_| RuntimeError::PlusTypeError(operator.clone()))
-                    }
-                    TokenType::Greater => {
-                        left_value
-                            .is_greater(right_value)
-                            .map_err(|_| RuntimeError::GreaterNonNumbers(operator.clone()))
-                    }
-                    TokenType::GreaterEqual => {
-                        left_value
-                            .is_greater_equal(right_value)
-                            .map_err(|_| RuntimeError::GreaterEqualNonNumbers(operator.clone()))
-                    }
-                    TokenType::Less => {
-                        left_value
-                            .is_less(right_value)
-                            .map_err(|_| RuntimeError::LessNonNumbers(operator.clone()))
-                    }
-                    TokenType::LessEqual => {
-                        left_value
-                            .is_less_equal(right_value)
-                            .map_err(|_| RuntimeError::LessEqualNonNumbers(operator.clone()))
-                    }
-                    TokenType::BangEqual => {
-                        left_value
-                            .is_not_equal(&right_value)
-                            .map_err(|_| {
-                                         RuntimeError::InternalError("Can't check non-equality"
-                                                                         .to_string())
-                                     })
-                    }
-                    TokenType::EqualEqual => {
-                        left_value
-                            .is_equal(&right_value)
-                            .map_err(|_| {
-                                         RuntimeError::InternalError("Can't check equality"
-                                                                         .to_string())
-                                     })
-                    }
-                    _ => {
-                        Err(RuntimeError::InternalError(format!("Invalid binary operator: {:?}",
-                                                                operator)))
-                    }
+                    TokenType::Minus => left_value
+                        .subtract(right_value)
+                        .map_err(|_| RuntimeError::SubtractNonNumbers(operator.clone())),
+                    TokenType::Slash => left_value.divide(right_value).map_err(|err| match err {
+                        ValueError::DivideByZero => {
+                            RuntimeError::DivideByZeroError(operator.clone())
+                        }
+                        _ => RuntimeError::DivideNonNumbers(operator.clone()),
+                    }),
+                    TokenType::Star => left_value
+                        .multiply(right_value)
+                        .map_err(|_| RuntimeError::MultiplyNonNumbers(operator.clone())),
+                    TokenType::Plus => left_value
+                        .plus(right_value)
+                        .map_err(|_| RuntimeError::PlusTypeError(operator.clone())),
+                    TokenType::Greater => left_value
+                        .is_greater(right_value)
+                        .map_err(|_| RuntimeError::GreaterNonNumbers(operator.clone())),
+                    TokenType::GreaterEqual => left_value
+                        .is_greater_equal(right_value)
+                        .map_err(|_| RuntimeError::GreaterEqualNonNumbers(operator.clone())),
+                    TokenType::Less => left_value
+                        .is_less(right_value)
+                        .map_err(|_| RuntimeError::LessNonNumbers(operator.clone())),
+                    TokenType::LessEqual => left_value
+                        .is_less_equal(right_value)
+                        .map_err(|_| RuntimeError::LessEqualNonNumbers(operator.clone())),
+                    TokenType::BangEqual => left_value.is_not_equal(&right_value).map_err(|_| {
+                        RuntimeError::InternalError("Can't check non-equality".to_string())
+                    }),
+                    TokenType::EqualEqual => left_value.is_equal(&right_value).map_err(|_| {
+                        RuntimeError::InternalError("Can't check equality".to_string())
+                    }),
+                    _ => Err(RuntimeError::InternalError(format!(
+                        "Invalid binary operator: {:?}",
+                        operator
+                    ))),
                 }
             }
-            Expr::Var(ref token, ref distance) => {
-                match distance {
-                    &Some(distance) => {
-                        match self.env.borrow().get_at(&token.lexeme, distance) {
-                            Ok(value) => Ok(value.clone()),
-                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                        }
-                    }
-                    &None => {
-                        match self.globals.borrow().get(&token.lexeme) {
-                            Ok(value) => Ok(value.clone()),
-                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                        }
-                    }
-                }
-            }
+            Expr::Var(ref token, ref distance) => match distance {
+                &Some(distance) => match self.env.borrow().get_at(&token.lexeme, distance) {
+                    Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                },
+                &None => match self.globals.borrow().get(&token.lexeme) {
+                    Ok(value) => Ok(value.clone()),
+                    Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                },
+            },
             Expr::Assign(ref token, ref expr, ref distance) => {
                 let value = self.interpret_expr(expr)?;
 
                 match distance {
-                    &Some(distance) => {
-                        match self.env
-                                  .borrow_mut()
-                                  .assign_at(&token.lexeme, value.clone(), distance) {
-                            Ok(()) => Ok(value.clone()),
-                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                        }
-                    }
-                    &None => {
-                        match self.globals
-                                  .borrow_mut()
-                                  .assign(&token.lexeme, value.clone()) {
-                            Ok(()) => Ok(value.clone()),
-                            Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
-                        }
-                    }
+                    &Some(distance) => match self.env.borrow_mut().assign_at(
+                        &token.lexeme,
+                        value.clone(),
+                        distance,
+                    ) {
+                        Ok(()) => Ok(value.clone()),
+                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                    },
+                    &None => match self.globals
+                        .borrow_mut()
+                        .assign(&token.lexeme, value.clone())
+                    {
+                        Ok(()) => Ok(value.clone()),
+                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                    },
                 }
             }
             Expr::Logical(ref left, ref operator, ref right) => {
@@ -331,9 +285,11 @@ impl Interpreter {
                 }
 
                 if arguments.len() != callable.arity() {
-                    return Err(RuntimeError::WrongArity(token.clone(),
-                                                        arguments.len(),
-                                                        callable.arity()));
+                    return Err(RuntimeError::WrongArity(
+                        token.clone(),
+                        arguments.len(),
+                        callable.arity(),
+                    ));
                 }
 
                 callable.call(self, evaluated_args)
@@ -366,6 +322,19 @@ impl Interpreter {
                 };
 
                 Ok(value)
+            }
+            Expr::This(ref token, ref distance) => {
+                println!("Interpreting Expr::This {:?} {:?}", token, distance);
+                match distance {
+                    &Some(distance) => match self.env.borrow().get_at(&token.lexeme, distance) {
+                        Ok(value) => Ok(value.clone()),
+                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                    },
+                    &None => match self.globals.borrow().get(&token.lexeme) {
+                        Ok(value) => Ok(value.clone()),
+                        Err(_) => Err(RuntimeError::UndefinedVariable(token.clone())),
+                    },
+                }
             }
         }
     }

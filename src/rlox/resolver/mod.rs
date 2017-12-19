@@ -36,7 +36,7 @@ impl Resolver {
                 self.declare(token.lexeme.clone());
                 self.define(token.lexeme.clone());
 
-                self.resolve_function(params, body);
+                self.resolve_function(params, body, false);
             }
             Stmt::Expr(ref mut expr) => self.resolve_expression(expr),
             Stmt::If(ref mut condition, ref mut then_branch, ref mut else_branch) => {
@@ -62,7 +62,7 @@ impl Resolver {
                             self.declare(token.lexeme.clone());
                             self.define(token.lexeme.clone());
 
-                            self.resolve_function(params, body);
+                            self.resolve_function(params, body, true);
                         }
                         _ => {}
                     }
@@ -119,6 +119,22 @@ impl Resolver {
                 self.resolve_expression(target);
                 self.resolve_expression(value);
             }
+            Expr::This(ref token, ref mut distance) => {
+                println!("Resolving Expr::This, {:?}, {:?}", token, distance);
+
+                if let Some(scope) = self.scopes.last() {
+                    if let Some(is_var_available) = scope.get(&token.lexeme) {
+                        if !is_var_available {
+                            println!("Error, this not available");
+                            // TODO: Error
+                        }
+                    }
+                }
+
+                let resolved_distance = self.resolve_local(token.lexeme.clone());
+                println!("Resolved distance for `this` {:?}", resolved_distance);
+                *distance = resolved_distance;
+            }
         }
     }
 
@@ -132,8 +148,36 @@ impl Resolver {
         None
     }
 
-    fn resolve_function(&mut self, params: &Vec<Token>, body: &mut Stmt) {
+    // I got something different from the book here but I'm still not sure why.
+    // The book talks about defining `this` on a scope right outside the method definitions,
+    // when resolving what here would be Stmt::Class. It talks about `this` being a kind of
+    // local variable that's always present when executing a method, but it's not exactly
+    // that since it's resolved only once when resolving the class (maybe it would be akin to
+    // a class variable?).
+    //
+    // In any case, I'm sure I messed something up when going from Java to Rust and maybe
+    // I'll find out what it was at some point, but right now this makes sense to me in my
+    // little world:
+    // - `this` is defined inside the function scope, but outside the block scope of the
+    //   function's body
+    // - That means that using `this` at the first level of nesting of a function (no nesting,
+    //   in the body) will have a resolved distance of 1.
+    // - When resolving a method field in the interpreter, the function's closure will wrap
+    //   another environment - the one with `this` in it.
+    // - At that point the distance will be 0, but when executing the function that environment
+    //   will be used as a parent for the execution environment (which includes resolved arguments
+    //   and local variables). Thus `this` will correctly be at a distance of `1` and agree with
+    //   the resolver.
+    //
+    // I have a bug in the closures implementation (tests/closures#simple_closure) which might
+    // explain all of this.
+    fn resolve_function(&mut self, params: &Vec<Token>, body: &mut Stmt, is_method: bool) {
         self.begin_scope();
+
+        if is_method {
+            self.begin_scope();
+            self.define("this".to_string());
+        }
 
         for param in params {
             self.declare(param.lexeme.clone());
@@ -141,6 +185,11 @@ impl Resolver {
         }
 
         self.resolve_statement(body);
+
+        if is_method {
+            self.end_scope();
+        }
+
         self.end_scope();
     }
 
@@ -160,6 +209,7 @@ impl Resolver {
 
     fn define(&mut self, name: String) {
         if let Some(scope) = self.scopes.last_mut() {
+            println!("Defining variable in resolver {}", name);
             scope.insert(name, true);
         }
     }

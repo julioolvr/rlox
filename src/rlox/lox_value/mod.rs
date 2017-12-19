@@ -179,30 +179,22 @@ impl LoxValue {
 
     pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
         let result = match *self {
-            LoxValue::Number(number) => {
-                match *other {
-                    LoxValue::Number(other) => number == other,
-                    _ => false,
-                }
-            }
-            LoxValue::String(ref string) => {
-                match *other {
-                    LoxValue::String(ref other) => string == other,
-                    _ => false,
-                }
-            }
-            LoxValue::Bool(b) => {
-                match *other {
-                    LoxValue::Bool(other) => b == other,
-                    _ => false,
-                }
-            }
-            LoxValue::Nil => {
-                match *other {
-                    LoxValue::Nil => true,
-                    _ => false,
-                }
-            }
+            LoxValue::Number(number) => match *other {
+                LoxValue::Number(other) => number == other,
+                _ => false,
+            },
+            LoxValue::String(ref string) => match *other {
+                LoxValue::String(ref other) => string == other,
+                _ => false,
+            },
+            LoxValue::Bool(b) => match *other {
+                LoxValue::Bool(other) => b == other,
+                _ => false,
+            },
+            LoxValue::Nil => match *other {
+                LoxValue::Nil => true,
+                _ => false,
+            },
             // TODO: Figure out how to check if two `Rc`s reference the same value
             LoxValue::Func(_) => false,
             // TODO: Figure out how to check if two `Rc`s reference the same value

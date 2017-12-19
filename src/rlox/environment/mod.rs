@@ -25,8 +25,10 @@ impl Environment {
     pub fn global() -> Environment {
         let mut env = Environment::new();
 
-        env.define("clock".to_string(),
-                   LoxValue::Func(Rc::new(native::ClockFunc::new())));
+        env.define(
+            "clock".to_string(),
+            LoxValue::Func(Rc::new(native::ClockFunc::new())),
+        );
 
         env
     }
@@ -51,11 +53,12 @@ impl Environment {
         }
     }
 
-    pub fn assign_at(&mut self,
-                     key: &String,
-                     val: LoxValue,
-                     distance: usize)
-                     -> Result<(), EnvironmentError> {
+    pub fn assign_at(
+        &mut self,
+        key: &String,
+        val: LoxValue,
+        distance: usize,
+    ) -> Result<(), EnvironmentError> {
         if distance == 0 {
             return self.assign(key, val);
         }
@@ -89,10 +92,16 @@ impl Environment {
     }
 
     fn ancestor(&self, distance: usize) -> Option<Rc<RefCell<Environment>>> {
+        println!("Looking for ancestor {}", distance);
         let mut ret_env = match self.enclosing {
             Some(ref parent_env) => parent_env.clone(),
             None => return None,
         };
+
+        println!(
+            "ret_env {:?}",
+            ret_env.borrow().values.keys()
+        );
 
         for _ in 1..distance {
             let new_env = match ret_env.borrow().enclosing {
@@ -101,6 +110,8 @@ impl Environment {
             };
 
             ret_env = new_env;
+
+            // println!("ret_env {:?}", ret_env.borrow().values);
         }
 
         Some(ret_env)

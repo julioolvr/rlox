@@ -22,51 +22,60 @@ fn class_declaration_missing_closing_brace() {
 
 #[test]
 fn printing_class_shows_class_name() {
-    let output = utils::execute(r#"
+    let output = utils::execute(
+        r#"
         class Something {}
         print Something;
-    "#);
+    "#,
+    );
 
     assert_eq!(output[0], "class <Something>");
 }
 
 #[test]
 fn printing_class_instance_shows_class_name() {
-    let output = utils::execute(r#"
+    let output = utils::execute(
+        r#"
         class Something {}
         var instance = Something();
         print instance;
-    "#);
+    "#,
+    );
 
     assert_eq!(output[0], "instance of <Something>");
 }
 
 #[test]
 fn read_property_from_instance_is_a_runtime_error() {
-    let output = utils::execute(r#"
+    let output = utils::execute(
+        r#"
         class Something {}
         var instance = Something();
         print instance.someProperty;
-    "#);
+    "#,
+    );
 
     assert!(output[0].ends_with("Undefined property `someProperty`."));
 }
 
 #[test]
 fn set_property_in_instance() {
-    let output = utils::execute(r#"
+    let output = utils::execute(
+        r#"
         class Something {}
         var instance = Something();
         instance.someProperty = 42;
         print instance.someProperty;
-    "#);
+    "#,
+    );
 
     assert_eq!(output[0], "42");
 }
 
 #[test]
 fn call_method_on_instance() {
-    let output = utils::execute(r#"
+    let output = utils::execute(
+        r#"
         class DeepThought {
             getAnswer() {
                 return 42;
@@ -75,7 +84,72 @@ fn call_method_on_instance() {
 
         var instance = DeepThought();
         print instance.getAnswer();
-    "#);
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
+
+#[test]
+fn reach_this_from_instance_method() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            getAnswer() {
+                return this.answer;
+            }
+        }
+
+        var instance = DeepThought();
+        instance.answer = 42;
+        print instance.getAnswer();
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
+
+#[test]
+fn detached_this() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            getAnswer() {
+                return this.answer;
+            }
+        }
+
+        var instance = DeepThought();
+        instance.answer = 42;
+        var method = instance.getAnswer;
+        print method();
+    "#,
+    );
+
+    assert_eq!(output[0], "42");
+}
+
+// Ignored until I fix the bug shown on closures#simple_closure
+#[test]
+#[ignore]
+fn callback_with_bound_this() {
+    let output = utils::execute(
+        r#"
+        class DeepThought {
+            getCallback() {
+                fun callback() {
+                    return this.answer;
+                }
+
+                return callback;
+            }
+        }
+
+        var instance = DeepThought();
+        instance.answer = 42;
+        print instance.getCallback()();
+    "#,
+    );
 
     assert_eq!(output[0], "42");
 }

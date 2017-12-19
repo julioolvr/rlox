@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
@@ -5,7 +6,7 @@ use std::collections::hash_map::HashMap;
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
 use rlox::interpreter::errors::RuntimeError;
-use rlox::lox_value::{LoxValue, LoxInstance};
+use rlox::lox_value::{LoxInstance, LoxValue};
 
 #[derive(Debug)]
 pub struct LoxClass {
@@ -20,7 +21,9 @@ pub struct LoxClassInternal {
 
 impl LoxClass {
     pub fn new(name: String, methods: HashMap<String, LoxValue>) -> LoxClass {
-        LoxClass { internal: Rc::new(LoxClassInternal { name, methods }) }
+        LoxClass {
+            internal: Rc::new(LoxClassInternal { name, methods }),
+        }
     }
 
     pub fn instantiate(&self) -> Result<LoxInstance, RuntimeError> {
@@ -33,14 +36,20 @@ impl LoxClass {
 }
 
 impl Callable for LoxClass {
+    fn as_any(&self) -> &Any {
+        self
+    }
     fn arity(&self) -> usize {
         0
     }
 
-    fn call(&self,
-            _interpreter: &mut Interpreter,
-            _arguments: Vec<LoxValue>)
-            -> Result<LoxValue, RuntimeError> {
-        Ok(LoxValue::Instance(Rc::new(RefCell::new(self.instantiate()?))))
+    fn call(
+        &self,
+        _interpreter: &mut Interpreter,
+        _arguments: Vec<LoxValue>,
+    ) -> Result<LoxValue, RuntimeError> {
+        Ok(LoxValue::Instance(Rc::new(RefCell::new(
+            self.instantiate()?,
+        ))))
     }
 }
