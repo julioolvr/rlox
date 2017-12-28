@@ -1,32 +1,25 @@
 import React from "react";
 
 class Rlox extends React.Component {
-  state = {
-    code: `fun getAnswer() {
-  return 42;
-}
-
-print getAnswer();
-    `
-  };
-
-  setCode(code) {
-    this.setState({ code });
-  }
-
   render() {
-    const { interpreter, children } = this.props;
+    const { code, onCodeChange, interpreter, children } = this.props;
 
     return (
       <div>
         <textarea
-          value={this.state.code}
-          onChange={e => this.setCode(e.target.value)}
+          autoFocus
+          value={code}
+          onChange={e => onCodeChange(e.target.value)}
         />
-        {children(interpreter.run(this.state.code))}
+        {children(interpreter.run(code))}
         <style jsx>{`
           textarea {
-            font-family: monospace;
+            font-family: "Roboto mono", serif;
+            font-size: 16px;
+            width: 100%;
+            height: 15em;
+            background-color: transparent;
+            color: #a7fe92;
           }
         `}</style>
       </div>
