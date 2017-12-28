@@ -8,6 +8,7 @@ const Output = ({ children }) => {
       <style jsx>{`
         pre {
           font-size: 1.2em;
+          overflow-y: auto;
         }
       `}</style>
     </div>

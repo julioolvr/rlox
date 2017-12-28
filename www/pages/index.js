@@ -133,11 +133,18 @@ print getAnswer();`
           .container {
             display: flex;
             justify-content: center;
+            padding: 0 2em;
           }
 
           .content {
             width: 40em;
             padding-bottom: 2em;
+          }
+
+          @media (max-width: 44em) {
+            .content {
+              width: 100%;
+            }
           }
 
           a {
