@@ -59,11 +59,17 @@ pub fn run_string(code: String) -> String {
     let writer = Rc::new(RefCell::new(Cursor::new(output)));
     let mut interpreter = Interpreter::new(writer.clone());
 
-    // TODO: Return error output too
-    run(&mut interpreter, code).unwrap();
-
-    let output = writer.borrow().get_ref().clone();
-    String::from_utf8(output).unwrap()
+    match run(&mut interpreter, code) {
+        Ok(_) => {
+            let output = writer.borrow().get_ref().clone();
+            String::from_utf8(output).unwrap()
+        }
+        Err(errors) => errors
+            .iter()
+            .map(|error| error.to_string())
+            .collect::<Vec<String>>()
+            .join("\n"),
+    }
 }
 
 fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
