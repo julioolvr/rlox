@@ -1,5 +1,5 @@
 use std::any::Any;
-use time;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
@@ -28,6 +28,9 @@ impl Callable for ClockFunc {
         _interpreter: &mut Interpreter,
         _arguments: Vec<LoxValue>,
     ) -> Result<LoxValue, RuntimeError> {
-        Ok(LoxValue::Number(time::get_time().sec as f64))
+        Ok(LoxValue::Number(SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as f64))
     }
 }
