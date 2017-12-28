@@ -26,3 +26,8 @@ can be used to test the interpreter - they can be found in `samples/`, e.g.
 ```
 cargo run -- samples/closures.lox
 ```
+
+## Playground
+
+rlox is available online thanks to the wonders of WebAssembly. Check it out at
+[rlox-wasm.now.sh](https://rlox-wasm.now.sh/).
