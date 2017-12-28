@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Cursor;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::io::Read;
@@ -51,6 +52,20 @@ pub fn run_repl<R: io::BufRead>(reader: &mut R, writer: Rc<RefCell<io::Write>>) 
     }
 }
 
+/// Receive Lox code as a string, and return the contents of
+/// stdout after executing it as another string:
+pub fn run_string(code: String) -> String {
+    let output: Vec<u8> = Vec::new();
+    let writer = Rc::new(RefCell::new(Cursor::new(output)));
+    let mut interpreter = Interpreter::new(writer.clone());
+
+    // TODO: Return error output too
+    run(&mut interpreter, code).unwrap();
+
+    let output = writer.borrow().get_ref().clone();
+    String::from_utf8(output).unwrap()
+}
+
 fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
     let scanner = Scanner::new(code);
     let (tokens, scanner_errors) = scanner.scan_tokens();
@@ -59,9 +74,9 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
 
     if scanner_errors.len() > 0 {
         return Err(scanner_errors
-                       .into_iter()
-                       .map(|err| Error::Scanner(err))
-                       .collect());
+            .into_iter()
+            .map(|err| Error::Scanner(err))
+            .collect());
     }
 
     match ast {
@@ -74,12 +89,7 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
                 None => Ok(()),
             }
         }
-        Err(errors) => {
-            Err(errors
-                    .into_iter()
-                    .map(|err| Error::Parser(err))
-                    .collect())
-        }
+        Err(errors) => Err(errors.into_iter().map(|err| Error::Parser(err)).collect()),
     }
 }
 

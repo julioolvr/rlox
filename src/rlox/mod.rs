@@ -7,4 +7,5 @@ mod interpreter;
 mod environment;
 mod callables;
 mod resolver;
+pub mod wasm;
 pub mod api;
