@@ -41,66 +41,37 @@ impl Interpreter {
 
     fn interpret_stmt(&mut self, stmt: &Stmt) -> Result<Option<LoxValue>, RuntimeError> {
         match *stmt {
-            Stmt::Print(ref expr) => match self.interpret_expr(expr) {
-                Ok(val) => {
-                    self.writer
-                        .borrow_mut()
-                        .write_all(format!("{}\n", val).as_ref())
-                        .expect("Error writing to stdout/writer");
-                    Ok(None)
-                }
-                Err(err) => Err(err),
-            },
-            Stmt::Expr(ref expr) => match self.interpret_expr(expr) {
-                Ok(_) => Ok(None),
-                Err(err) => Err(err),
-            },
-            Stmt::Var(ref token, ref expr) => {
-                let value = match self.interpret_expr(expr) {
-                    Ok(value) => value,
-                    Err(err) => return Err(err),
-                };
-
+            Stmt::Print(ref expr) => self.interpret_expr(expr).map(|val| {
+                self.writer
+                    .borrow_mut()
+                    .write_all(format!("{}\n", val).as_ref())
+                    .expect("Error writing to stdout/writer");
+                None
+            }),
+            Stmt::Expr(ref expr) => self.interpret_expr(expr).map(|_| None),
+            Stmt::Var(ref token, ref expr) => self.interpret_expr(expr).map(|value| {
                 self.env.borrow_mut().define(token.lexeme.clone(), value);
-
-                Ok(None)
-            }
+                None
+            }),
             Stmt::Block(ref statements) => {
                 let env = Environment::from_parent(self.env.clone());
 
                 self.interpret_block(statements, RefCell::new(env))
             }
             Stmt::If(ref condition, ref then_branch, ref else_branch) => {
-                let condition_result = match self.interpret_expr(condition) {
-                    Ok(value) => value,
-                    Err(err) => return Err(err),
-                };
-
-                if condition_result.is_truthy() {
-                    self.interpret_stmt(then_branch)
-                } else if let Some(ref asd) = **else_branch {
-                    self.interpret_stmt(asd)
-                } else {
-                    Ok(None)
-                }
+                self.interpret_expr(condition).and_then(|condition_result| {
+                    if condition_result.is_truthy() {
+                        self.interpret_stmt(then_branch)
+                    } else if let Some(ref else_branch) = **else_branch {
+                        self.interpret_stmt(else_branch)
+                    } else {
+                        Ok(None)
+                    }
+                })
             }
             Stmt::While(ref condition, ref body) => {
-                let mut keep_looping = match self.interpret_expr(condition) {
-                    Ok(result) => result.is_truthy(),
-                    Err(err) => return Err(err),
-                };
-
-                while keep_looping {
-                    let result = self.interpret_stmt(body);
-
-                    if result.is_err() {
-                        return result;
-                    }
-
-                    keep_looping = match self.interpret_expr(condition) {
-                        Ok(result) => result.is_truthy(),
-                        Err(err) => return Err(err),
-                    }
+                while self.interpret_expr(condition)?.is_truthy() {
+                    self.interpret_stmt(body)?;
                 }
 
                 Ok(None)
