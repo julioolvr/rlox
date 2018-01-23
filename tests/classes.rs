@@ -240,3 +240,32 @@ fn return_from_init_throws_an_error() {
     "#,
     );
 }
+
+#[test]
+fn compared_by_identity() {
+    let output = utils::execute(
+        r#"
+        class A {}
+
+        var B = A;
+        print A == B;
+    "#,
+    );
+
+    assert_eq!(output[0], "true");
+}
+
+#[test]
+fn compare_instances_by_identity() {
+    let output = utils::execute(
+        r#"
+        class A {}
+
+        var a = A();
+        var b = a;
+        print a == b;
+    "#,
+    );
+
+    assert_eq!(output[0], "true");
+}
