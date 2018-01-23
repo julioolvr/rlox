@@ -22,3 +22,19 @@ fn function_parameters() {
 fn return_on_top_level() {
     execute("return 42;");
 }
+
+#[test]
+fn compared_by_identity() {
+    let output = execute(
+        r#"
+      fun sum(a, b) {
+          return a + b;
+      }
+
+      var b = sum;
+      print b == sum;
+    "#,
+    );
+
+    assert_eq!(output[0], "true");
+}

@@ -19,6 +19,7 @@ impl Callable for ClockFunc {
     fn as_any(&self) -> &Any {
         self
     }
+
     fn arity(&self) -> usize {
         0
     }

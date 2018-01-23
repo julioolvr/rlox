@@ -195,11 +195,18 @@ impl LoxValue {
                 LoxValue::Nil => true,
                 _ => false,
             },
-            // TODO: Figure out how to check if two `Rc`s reference the same value
-            LoxValue::Func(_) => false,
-            // TODO: Figure out how to check if two `Rc`s reference the same value
-            LoxValue::Class(_) => false,
-            LoxValue::Instance(_) => false, // TODO: Change
+            LoxValue::Func(ref f) => match *other {
+                LoxValue::Func(ref other) => Rc::ptr_eq(f, other),
+                _ => false,
+            },
+            LoxValue::Class(ref c) => match *other {
+                LoxValue::Class(ref other) => Rc::ptr_eq(c, other),
+                _ => false,
+            },
+            LoxValue::Instance(ref i) => match *other {
+                LoxValue::Instance(ref other) => Rc::ptr_eq(i, other),
+                _ => false,
+            },
         };
 
         Ok(LoxValue::Bool(result))
