@@ -5,14 +5,12 @@ use std::collections::hash_map::HashMap;
 
 #[derive(Clone, PartialEq)]
 enum ClassType {
-    None, // TODO: Use Option instead
     Class,
     SubClass,
 }
 
 #[derive(Clone, PartialEq)]
 enum FunctionType {
-    None, // TODO: Use Option instead
     Function,
     Method,
     Initializer,
@@ -20,16 +18,16 @@ enum FunctionType {
 
 pub struct Resolver {
     scopes: Vec<HashMap<String, bool>>,
-    class_type: ClassType,
-    function_type: FunctionType,
+    class_type: Option<ClassType>,
+    function_type: Option<FunctionType>,
 }
 
 impl Resolver {
     pub fn new() -> Resolver {
         Resolver {
             scopes: Vec::new(),
-            class_type: ClassType::None,
-            function_type: FunctionType::None,
+            class_type: None,
+            function_type: None,
         }
     }
 
@@ -57,7 +55,7 @@ impl Resolver {
                 self.declare(token.lexeme.clone());
                 self.define(token.lexeme.clone());
 
-                self.resolve_function(params, body, FunctionType::Function);
+                self.resolve_function(params, body, Some(FunctionType::Function));
             }
             Stmt::Expr(ref mut expr) => self.resolve_expression(expr),
             Stmt::If(ref mut condition, ref mut then_branch, ref mut else_branch) => {
@@ -70,12 +68,14 @@ impl Resolver {
             }
             Stmt::Print(ref mut expr) => self.resolve_expression(expr),
             Stmt::Return(_, ref mut expr) => {
-                if self.function_type == FunctionType::Initializer {
-                    panic!("UnexpectedTokenError: Cannot use `return` on an initializer.");
-                }
+                {
+                    let function_type = self.function_type
+                        .as_ref()
+                        .expect("UnexpectedTokenError: Cannot use `return` at the top level.");
 
-                if self.function_type == FunctionType::None {
-                    panic!("UnexpectedTokenError: Cannot use `return` at the top level.");
+                    if *function_type == FunctionType::Initializer {
+                        panic!("UnexpectedTokenError: Cannot use `return` on an initializer.")
+                    }
                 }
 
                 self.resolve_expression(expr)
@@ -87,10 +87,10 @@ impl Resolver {
             Stmt::Class(ref token, ref mut superclass, ref mut methods) => {
                 self.declare(token.lexeme.clone());
                 let enclosing_class_type = self.class_type.clone();
-                self.class_type = ClassType::Class;
+                self.class_type = Some(ClassType::Class);
 
                 if let &mut Some(ref mut superclass) = superclass {
-                    self.class_type = ClassType::SubClass;
+                    self.class_type = Some(ClassType::SubClass);
                     self.resolve_expression(superclass);
                     self.begin_scope();
                     self.define("super".to_string());
@@ -111,7 +111,7 @@ impl Resolver {
                                 FunctionType::Method
                             };
 
-                            self.resolve_function(params, body, function_type);
+                            self.resolve_function(params, body, Some(function_type));
                         }
                         _ => {}
                     }
@@ -176,7 +176,7 @@ impl Resolver {
                 self.resolve_expression(value);
             }
             Expr::This(ref token, ref mut distance) => {
-                if self.class_type == ClassType::None {
+                if self.class_type.is_none() {
                     panic!("UnexpectedTokenError: Cannot use `this` outside of a method.");
                 }
 
@@ -191,24 +191,27 @@ impl Resolver {
                 *distance = self.resolve_local(token.lexeme.clone());
             }
             Expr::Super(ref token, _, ref mut distance) => {
-                if self.class_type == ClassType::None {
-                    panic!("UnexpectedTokenError: Cannot use `super` outside of a method.");
-                }
+                let class_type = self.class_type
+                    .as_ref()
+                    .expect("UnexpectedTokenError: Cannot use `super` outside of a method.");
 
-                if self.class_type == ClassType::Class {
-                    panic!("UnexpectedTokenError: Cannot use `super` without a superclass.");
-                }
-
-                if let Some(scope) = self.scopes.last() {
-                    if let Some(is_var_available) = scope.get(&token.lexeme) {
-                        if !is_var_available {
-                            // TODO: Error
+                match class_type {
+                    &ClassType::Class => {
+                        panic!("UnexpectedTokenError: Cannot use `super` without a superclass.")
+                    }
+                    _ => {
+                        if let Some(scope) = self.scopes.last() {
+                            if let Some(is_var_available) = scope.get(&token.lexeme) {
+                                if !is_var_available {
+                                    // TODO: Error
+                                }
+                            }
                         }
+
+                        let resolved_distance = self.resolve_local(token.lexeme.clone());
+                        *distance = resolved_distance;
                     }
                 }
-
-                let resolved_distance = self.resolve_local(token.lexeme.clone());
-                *distance = resolved_distance;
             }
         }
     }
@@ -227,7 +230,7 @@ impl Resolver {
         &mut self,
         params: &Vec<Token>,
         body: &mut Stmt,
-        function_type: FunctionType,
+        function_type: Option<FunctionType>,
     ) {
         let enclosing_function = self.function_type.clone();
         self.function_type = function_type;
