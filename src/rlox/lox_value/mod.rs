@@ -74,97 +74,82 @@ impl LoxValue {
     }
 
     pub fn subtract(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Number(left_number - right_number));
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Number(left_number - right_number))
             }
+            _ => Err(ValueError::TypeError),
         }
-
-        Err(ValueError::TypeError)
     }
 
     pub fn divide(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
                 if right_number != 0.0 {
-                    return Ok(LoxValue::Number(left_number / right_number));
+                    Ok(LoxValue::Number(left_number / right_number))
                 } else {
-                    return Err(ValueError::DivideByZero);
-                }
-            }
-        }
-
-        Err(ValueError::TypeError)
-    }
-
-    pub fn multiply(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Number(left_number * right_number));
-            }
-        }
-
-        Err(ValueError::TypeError)
-    }
-
-    pub fn plus(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        match *self {
-            LoxValue::Number(left_number) => {
-                if let LoxValue::Number(right_number) = other {
-                    Ok(LoxValue::Number(left_number + right_number))
-                } else {
-                    Err(ValueError::TypeError)
-                }
-            }
-            LoxValue::String(ref left_string) => {
-                if let LoxValue::String(right_string) = other {
-                    Ok(LoxValue::String(format!("{}{}", left_string, right_string)))
-                } else {
-                    Err(ValueError::TypeError)
+                    Err(ValueError::DivideByZero)
                 }
             }
             _ => Err(ValueError::TypeError),
         }
     }
 
-    pub fn is_greater(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Bool(left_number > right_number));
+    pub fn multiply(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Number(left_number * right_number))
             }
+            _ => Err(ValueError::TypeError),
         }
+    }
 
-        Err(ValueError::TypeError)
+    pub fn plus(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Number(left_number + right_number))
+            }
+            (&LoxValue::String(ref left_string), LoxValue::String(ref right_string)) => {
+                Ok(LoxValue::String(format!("{}{}", left_string, right_string)))
+            }
+            _ => Err(ValueError::TypeError),
+        }
+    }
+
+    pub fn is_greater(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Bool(left_number > right_number))
+            }
+            _ => Err(ValueError::TypeError),
+        }
     }
 
     pub fn is_greater_equal(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Bool(left_number >= right_number));
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Bool(left_number >= right_number))
             }
+            _ => Err(ValueError::TypeError),
         }
-
-        Err(ValueError::TypeError)
     }
 
     pub fn is_less(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Bool(left_number < right_number));
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Bool(left_number < right_number))
             }
+            _ => Err(ValueError::TypeError),
         }
-
-        Err(ValueError::TypeError)
     }
 
     pub fn is_less_equal(&self, other: LoxValue) -> Result<LoxValue, ValueError> {
-        if let LoxValue::Number(left_number) = *self {
-            if let LoxValue::Number(right_number) = other {
-                return Ok(LoxValue::Bool(left_number <= right_number));
+        match (self, other) {
+            (&LoxValue::Number(left_number), LoxValue::Number(right_number)) => {
+                Ok(LoxValue::Bool(left_number <= right_number))
             }
+            _ => Err(ValueError::TypeError),
         }
-
-        Err(ValueError::TypeError)
     }
 
     pub fn is_not_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
@@ -178,35 +163,15 @@ impl LoxValue {
     }
 
     pub fn is_equal(&self, other: &LoxValue) -> Result<LoxValue, ValueError> {
-        let result = match *self {
-            LoxValue::Number(number) => match *other {
-                LoxValue::Number(other) => number == other,
-                _ => false,
-            },
-            LoxValue::String(ref string) => match *other {
-                LoxValue::String(ref other) => string == other,
-                _ => false,
-            },
-            LoxValue::Bool(b) => match *other {
-                LoxValue::Bool(other) => b == other,
-                _ => false,
-            },
-            LoxValue::Nil => match *other {
-                LoxValue::Nil => true,
-                _ => false,
-            },
-            LoxValue::Func(ref f) => match *other {
-                LoxValue::Func(ref other) => Rc::ptr_eq(f, other),
-                _ => false,
-            },
-            LoxValue::Class(ref c) => match *other {
-                LoxValue::Class(ref other) => Rc::ptr_eq(c, other),
-                _ => false,
-            },
-            LoxValue::Instance(ref i) => match *other {
-                LoxValue::Instance(ref other) => Rc::ptr_eq(i, other),
-                _ => false,
-            },
+        let result = match (self, other) {
+            (&LoxValue::Number(number), &LoxValue::Number(other)) => number == other,
+            (&LoxValue::String(ref string), &LoxValue::String(ref other)) => string == other,
+            (&LoxValue::Bool(b), &LoxValue::Bool(other)) => b == other,
+            (&LoxValue::Nil, &LoxValue::Nil) => true,
+            (&LoxValue::Func(ref f), &LoxValue::Func(ref other)) => Rc::ptr_eq(f, other),
+            (&LoxValue::Class(ref c), &LoxValue::Class(ref other)) => Rc::ptr_eq(c, other),
+            (&LoxValue::Instance(ref i), &LoxValue::Instance(ref other)) => Rc::ptr_eq(i, other),
+            _ => false,
         };
 
         Ok(LoxValue::Bool(result))
