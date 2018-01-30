@@ -12,14 +12,14 @@ use rlox::token::TokenType;
 use rlox::environment::Environment;
 use rlox::callables::LoxFunc;
 
-pub struct Interpreter {
+pub struct Interpreter<'a> {
     env: Rc<RefCell<Environment>>,
     globals: Rc<RefCell<Environment>>,
-    writer: Rc<RefCell<io::Write>>,
+    writer: Rc<RefCell<&'a mut io::Write>>,
 }
 
-impl Interpreter {
-    pub fn new(writer: Rc<RefCell<io::Write>>) -> Interpreter {
+impl<'a> Interpreter<'a> {
+    pub fn new(writer: Rc<RefCell<&'a mut io::Write>>) -> Interpreter<'a> {
         let globals = Rc::new(RefCell::new(Environment::global()));
 
         Interpreter {

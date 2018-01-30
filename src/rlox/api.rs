@@ -11,22 +11,22 @@ use rlox::errors::Error;
 use rlox::interpreter::Interpreter;
 use rlox::resolver::Resolver;
 
-// TODO: The api for the writer is kind of ugly, I feel like implementation details
-// are leaking from it. Revisit at some point.
-pub fn run_file(path: &str, writer: Rc<RefCell<io::Write>>) -> Result<(), Vec<Error>> {
+pub fn run_file(path: &str, writer: &mut io::Write) -> Result<(), Vec<Error>> {
     let mut f = File::open(path).expect("file not found");
     let mut contents = String::new();
     f.read_to_string(&mut contents)
         .expect("something went wrong reading the file");
 
-    let mut interpreter = Interpreter::new(writer.clone());
+    let writer = Rc::new(RefCell::new(writer));
+    let mut interpreter = Interpreter::new(writer);
     run(&mut interpreter, contents)
 }
 
-pub fn run_repl<R: io::BufRead>(reader: &mut R, writer: Rc<RefCell<io::Write>>) {
+pub fn run_repl<R: io::BufRead>(reader: &mut R, writer: &mut io::Write) {
     println!("Welcome to the rlox prompt");
     println!("^D to exit\n");
 
+    let writer = Rc::new(RefCell::new(writer));
     let user_input = ReplIterator::new(reader, writer.clone());
     let mut interpreter = Interpreter::new(writer.clone());
 
@@ -56,12 +56,17 @@ pub fn run_repl<R: io::BufRead>(reader: &mut R, writer: Rc<RefCell<io::Write>>) 
 /// stdout after executing it as another string:
 pub fn run_string(code: String) -> String {
     let output: Vec<u8> = Vec::new();
-    let writer = Rc::new(RefCell::new(Cursor::new(output)));
-    let mut interpreter = Interpreter::new(writer.clone());
+    let mut cursor = Cursor::new(output);
 
-    match run(&mut interpreter, code) {
+    let result = {
+        let mut writer = Rc::new(RefCell::new(&mut cursor as &mut io::Write));
+        let mut interpreter = Interpreter::new(writer.clone());
+        run(&mut interpreter, code)
+    };
+
+    match result {
         Ok(_) => {
-            let output = writer.borrow().get_ref().clone();
+            let output = cursor.get_ref().clone();
             String::from_utf8(output).unwrap()
         }
         Err(errors) => errors
@@ -99,18 +104,18 @@ fn run(interpreter: &mut Interpreter, code: String) -> Result<(), Vec<Error>> {
     }
 }
 
-struct ReplIterator<R: io::BufRead> {
+struct ReplIterator<'a, R: io::BufRead> {
     reader: R,
-    writer: Rc<RefCell<io::Write>>,
+    writer: Rc<RefCell<&'a mut io::Write>>,
 }
 
-impl<R: io::BufRead> ReplIterator<R> {
-    fn new(reader: R, writer: Rc<RefCell<io::Write>>) -> ReplIterator<R> {
+impl<'a, R: io::BufRead> ReplIterator<'a, R> {
+    fn new(reader: R, writer: Rc<RefCell<&'a mut io::Write>>) -> ReplIterator<R> {
         ReplIterator { reader, writer }
     }
 }
 
-impl<R: io::BufRead> Iterator for ReplIterator<R> {
+impl<'a, R: io::BufRead> Iterator for ReplIterator<'a, R> {
     type Item = String;
 
     fn next(&mut self) -> Option<Self::Item> {
