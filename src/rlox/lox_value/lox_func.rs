@@ -9,7 +9,6 @@ use rlox::environment::Environment;
 use rlox::interpreter::errors::RuntimeError;
 use rlox::lox_value::{LoxInstance, LoxValue};
 
-// TODO: move this outside of rlox::callables
 #[derive(Debug)]
 pub struct LoxFunc {
     declaration: Stmt,

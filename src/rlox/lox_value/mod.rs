@@ -1,6 +1,7 @@
 mod errors;
 mod lox_class;
 mod lox_instance;
+mod lox_func;
 
 use std;
 use std::rc::Rc;
@@ -9,6 +10,7 @@ use std::cell::RefCell;
 use rlox::callables::Callable;
 pub use self::lox_class::{LoxClass, LoxClassInternal};
 pub use self::lox_instance::LoxInstance;
+pub use self::lox_func::LoxFunc;
 pub use self::errors::ValueError;
 
 #[derive(Debug)]

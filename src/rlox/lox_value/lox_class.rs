@@ -4,10 +4,9 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 
 use rlox::callables::Callable;
-use rlox::callables::LoxFunc;
 use rlox::interpreter::Interpreter;
 use rlox::interpreter::errors::RuntimeError;
-use rlox::lox_value::{LoxInstance, LoxValue};
+use rlox::lox_value::{LoxFunc, LoxInstance, LoxValue};
 
 #[derive(Debug)]
 pub struct LoxClass {

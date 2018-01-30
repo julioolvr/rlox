@@ -6,11 +6,10 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 
 use self::errors::RuntimeError;
-use rlox::lox_value::{LoxClass, LoxValue, ValueError};
+use rlox::lox_value::{LoxClass, LoxFunc, LoxValue, ValueError};
 use rlox::parser::{Expr, Stmt};
 use rlox::token::TokenType;
 use rlox::environment::Environment;
-use rlox::callables::LoxFunc;
 
 pub struct Interpreter<'a> {
     env: Rc<RefCell<Environment>>,
