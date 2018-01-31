@@ -112,7 +112,11 @@ impl<'a> Interpreter<'a> {
                             )));
                             methods.insert(name.lexeme.clone(), method);
                         }
-                        _ => return Err(RuntimeError::InternalError("TODO: Change me".to_string())),
+                        _ => {
+                            return Err(RuntimeError::InternalError(
+                                "Found a non Stmt::Func as a method of a class".to_string(),
+                            ))
+                        }
                     };
                 }
 
