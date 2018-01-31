@@ -298,9 +298,7 @@ impl<'a> Interpreter<'a> {
 
                 match resolved_target {
                     // TODO: Don't clone!
-                    LoxValue::Instance(ref instance) => {
-                        Ok(instance.borrow().get(&token.lexeme)?.clone())
-                    }
+                    LoxValue::Instance(ref instance) => Ok(instance.borrow().get(&token)?.clone()),
                     _ => Err(RuntimeError::InvalidGetTarget(token.clone())),
                 }
             }
@@ -365,7 +363,7 @@ impl<'a> Interpreter<'a> {
 
                     match resolved_method {
                         Some(method) => Ok(LoxValue::Func(Rc::new(method))),
-                        None => Err(RuntimeError::UndefinedProperty(method.lexeme.clone())),
+                        None => Err(RuntimeError::UndefinedProperty(method.clone())),
                     }
                 }
                 &None => Err(RuntimeError::InternalError(

@@ -18,7 +18,7 @@ pub enum RuntimeError {
     CallOnNonCallable(Token),
     WrongArity(Token, usize, usize),
     InvalidGetTarget(Token),
-    UndefinedProperty(String),
+    UndefinedProperty(Token),
     InvalidSuperclass(Token),
 }
 
@@ -94,9 +94,11 @@ impl std::fmt::Display for RuntimeError {
                 "[line {}] Only instances have properties, tried to access `{}` in non-instance",
                 token.line, token.lexeme
             ),
-            RuntimeError::UndefinedProperty(ref name) => {
-                write!(f, "Undefined property `{}`.", name) // TODO: Try to get the line number
-            }
+            RuntimeError::UndefinedProperty(ref token) => write!(
+                f,
+                "[line {}] Undefined property `{}`.",
+                token.line, token.lexeme
+            ),
             RuntimeError::InvalidSuperclass(ref token) => write!(
                 f,
                 "[line {}] Invalid parent class for `{}`.",
