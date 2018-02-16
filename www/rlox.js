@@ -1,4 +1,4 @@
-import loadRlox from "../src/lib.rs";
+import wasmLibPath from "../src/lib.rs";
 
 class RloxInterpreter {
   constructor(wasmModuleExports) {
@@ -53,7 +53,8 @@ function* collectCString(buffer) {
 }
 
 export default function getInterpreter() {
-  return loadRlox().then(
-    results => new RloxInterpreter(results.instance.exports)
-  );
+  return fetch(wasmLibPath)
+    .then(response => response.arrayBuffer())
+    .then(buffer => WebAssembly.instantiate(buffer))
+    .then(results => new RloxInterpreter(results.instance.exports));
 }

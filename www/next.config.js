@@ -9,7 +9,8 @@ module.exports = {
       test: /\.rs$/,
       use: [
         {
-          loader: "wasm-loader"
+          loader: "file-loader",
+          options: { name: "[hash].wasm", outputPath: "wasm/" }
         },
         {
           loader: "rust-native-wasm-loader",

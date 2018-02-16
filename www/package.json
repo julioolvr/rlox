@@ -9,7 +9,10 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "export":
+      "npm run build && next export && mkdir out/_next/webpack && cp -r ./.next/wasm out/_next/webpack",
+    "deploy": "npm run export && now ./out --public --name rlox && now alias"
   },
   "dependencies": {
     "next": "^5.0.0",
@@ -17,7 +20,12 @@
     "react-dom": "^16.2.0"
   },
   "devDependencies": {
+    "file-loader": "^1.1.6",
     "rust-native-wasm-loader": "^0.2.7",
     "wasm-loader": "^1.1.0"
+  },
+  "now": {
+    "name": "rlox",
+    "alias": "rlox-wasm"
   }
 }
