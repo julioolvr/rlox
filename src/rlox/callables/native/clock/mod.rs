@@ -1,10 +1,19 @@
 use std::any::Any;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use rlox::callables::Callable;
 use rlox::interpreter::Interpreter;
 use rlox::interpreter::errors::RuntimeError;
 use rlox::lox_value::LoxValue;
+
+cfg_if! {
+    if #[cfg(target_arch = "wasm32")] {
+        mod wasm;
+        use self::wasm::get_current_time;
+    } else {
+        mod default;
+        use self::default::get_current_time;
+    }
+}
 
 #[derive(Debug)]
 pub struct ClockFunc {}
@@ -29,9 +38,6 @@ impl Callable for ClockFunc {
         _interpreter: &mut Interpreter,
         _arguments: Vec<LoxValue>,
     ) -> Result<LoxValue, RuntimeError> {
-        Ok(LoxValue::Number(SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as f64))
+        Ok(LoxValue::Number(get_current_time() as f64))
     }
 }

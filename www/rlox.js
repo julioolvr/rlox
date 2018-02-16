@@ -55,6 +55,10 @@ function* collectCString(buffer) {
 export default function getInterpreter() {
   return fetch(wasmLibPath)
     .then(response => response.arrayBuffer())
-    .then(buffer => WebAssembly.instantiate(buffer))
+    .then(buffer =>
+      WebAssembly.instantiate(buffer, {
+        env: { get_current_js_time: () => Math.floor(Date.now() / 1000) }
+      })
+    )
     .then(results => new RloxInterpreter(results.instance.exports));
 }
